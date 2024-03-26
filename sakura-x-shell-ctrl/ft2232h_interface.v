@@ -5,7 +5,7 @@
 //    Project:       tkojima
 //    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
 //    Created Date:  15-03-2024 12:13:21
-//    Last Modified: 18-03-2024 10:59:54
+//    Last Modified: 25-03-2024 14:15:11
 //
 
 `include "def.v"
@@ -28,7 +28,9 @@ module ft2232_fifo_interface #(
 	// to FIFO channel
 	output [`BYTE_B] o_fifo_write_data,
 	input i_fifo_full,
-	output o_fifo_write_enable
+	output o_fifo_write_enable,
+	// status
+	output o_busy
 );
 
 	// function to calculate ceil(a/b)
@@ -194,4 +196,5 @@ module ft2232_fifo_interface #(
 	assign io_ftdi_data = (r_state[STATE_WD_PULSE_B]
 							| r_state[STATE_WD_SETUP_B]) ? r_ftdi_write_data : 8'bz;
 
+	assign o_busy = (r_state != STATE_IDLE);
 endmodule

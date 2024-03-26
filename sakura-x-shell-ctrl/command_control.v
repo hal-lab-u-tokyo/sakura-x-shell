@@ -1,6 +1,19 @@
+//
+//    Copyright (C) 2024 The University of Tokyo
+//    
+//    File:          /workspace/sakura-x-shell/sakura-x-shell-ctrl/command_control.v
+//    Project:       tkojima
+//    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
+//    Created Date:  25-03-2024 14:14:33
+//    Last Modified: 25-03-2024 14:15:05
+//
+
+
 `include "def.v"
 
-module command_control (
+module command_control #(
+	parameter RESET_CYCLES = 100
+) (
 	input clk,
 	input reset_n,
 	// from fifo
@@ -21,7 +34,11 @@ module command_control (
 	input  i_read_data_valid,
 	output o_read_data_ready,
 	output [`WORD_B] o_common, //shared for addr and write data
-	input [`WORD_B] i_read_data
+	input [`WORD_B] i_read_data,
+	// soft reset
+	output o_sw_reset_n,
+	// status
+	output o_busy
 );
 
 	// command decode
@@ -56,29 +73,34 @@ module command_control (
 	// big endian
 	wire [`BYTE_B] w_read_byte = r_read_data[8 * r_byte_count +: 8];
 
+	// reset control
+	reg [6:0] r_reset_cycles;
+
 	// state machine
 	reg r_fifo_read_enable;
-	localparam STATE_W = 11;
+	localparam STATE_W = 12;
 	localparam STATE_WAIT_B = 0;
-	localparam STATE_WAIT = 1 << STATE_WAIT_B;						// 0x01
+	localparam STATE_WAIT = 1 << STATE_WAIT_B;							// 0x01
 	localparam STATE_GET_COMMAND_B = 1;
-	localparam STATE_GET_COMMAND = 1 << STATE_GET_COMMAND_B;		// 0x02
+	localparam STATE_GET_COMMAND = 1 << STATE_GET_COMMAND_B;			// 0x02
 	localparam STATE_ACK_COMMAND_B = 2;
-	localparam STATE_ACK_COMMAND = 1 << STATE_ACK_COMMAND_B;		// 0x04
+	localparam STATE_ACK_COMMAND = 1 << STATE_ACK_COMMAND_B;			// 0x04
 	localparam STATE_SET_READ_ADDR_B = 3;
-	localparam STATE_SET_READ_ADDR = 1 << STATE_SET_READ_ADDR_B;	// 0x08
+	localparam STATE_SET_READ_ADDR = 1 << STATE_SET_READ_ADDR_B;		// 0x08
 	localparam STATE_READ_DATA_B = 5;
-	localparam STATE_READ_DATA = 1 << STATE_READ_DATA_B;			// 0x20
+	localparam STATE_READ_DATA = 1 << STATE_READ_DATA_B;				// 0x20
 	localparam STATE_READ_DATA_ACK_B = 6;
-	localparam STATE_READ_DATA_ACK = 1 << STATE_READ_DATA_ACK_B;	// 0x40
+	localparam STATE_READ_DATA_ACK = 1 << STATE_READ_DATA_ACK_B;		// 0x40
 	localparam STATE_READ_DATA_SEND_B = 7;
-	localparam STATE_READ_DATA_SEND = 1 << STATE_READ_DATA_SEND_B;	// 0x80
+	localparam STATE_READ_DATA_SEND = 1 << STATE_READ_DATA_SEND_B;		// 0x80
 	localparam STATE_SET_WRITE_ADDR_B = 8;
-	localparam STATE_SET_WRITE_ADDR = 1 << STATE_SET_WRITE_ADDR_B;	// 0x100
+	localparam STATE_SET_WRITE_ADDR = 1 << STATE_SET_WRITE_ADDR_B;		// 0x100
 	localparam STATE_FETCH_WRITE_DATA_B = 9;
 	localparam STATE_FETCH_WRITE_DATA = 1 << STATE_FETCH_WRITE_DATA_B;	// 0x200
 	localparam STATE_WRITE_DATA_B = 10;
-	localparam STATE_WRITE_DATA = 1 << STATE_WRITE_DATA_B;			// 0x400
+	localparam STATE_WRITE_DATA = 1 << STATE_WRITE_DATA_B;				// 0x400
+	localparam STATE_RESET_B = 11;
+	localparam STATE_RESET = 1 << STATE_RESET_B;						// 0x800
 
 
 	reg [STATE_W-1:0] r_state;
@@ -88,6 +110,7 @@ module command_control (
 			r_state <= STATE_WAIT;
 			r_word_count <= 0;
 			r_word_size <= 0;
+			r_reset_cycles <= 0;
 		end else begin
 			case (r_state)
 				STATE_WAIT: begin
@@ -126,7 +149,8 @@ module command_control (
 								r_word_count <= 0;
 							end else if (w_reset_cmd) begin
 								// reset command
-								r_state <= STATE_WAIT;
+								r_state <= STATE_RESET;
+								r_reset_cycles <= RESET_CYCLES;
 							end
 						end
 					end
@@ -174,6 +198,13 @@ module command_control (
 							r_state <= STATE_SET_WRITE_ADDR;
 							r_word_count <= r_word_count + 1;
 						end
+					end
+				end
+				STATE_RESET: begin
+					if (r_reset_cycles == 0) begin
+						r_state <= STATE_WAIT;
+					end else begin
+						r_reset_cycles <= r_reset_cycles - 1;
 					end
 				end
 			endcase
@@ -265,218 +296,9 @@ module command_control (
 	assign o_read_data_ready = r_state[STATE_READ_DATA_ACK_B];
 	assign o_common = (!r_state[STATE_WRITE_DATA_B]) ? r_addr + r_word_count * 4 :
 						r_write_data;
+	assign o_busy = r_state != STATE_WAIT;
+
+	assign o_sw_reset_n = r_state[STATE_RESET_B] ? `ENABLE_ : `DISABLE_;
 
 endmodule
 
-
-// module axi4_control #
-// (
-// 	parameter AXI_ADDR_WIDTH = 32,
-// 	parameter AXI_DATA_WIDTH = 32
-// ) (
-// 	input clk,
-// 	input reset_n,
-
-// 	// to/from local
-// 	input i_addr_valid,
-// 	input i_write_enable,
-// 	input i_wdata_valid,
-// 	output o_ready,
-// 	input [AXI_ADDR_WIDTH-1:0] i_addr,
-// 	output[AXI_DATA_WIDTH-1:0] o_read_data,
-// 	input [AXI_DATA_WIDTH-1:0] i_write_data,
-
-// 	// -- write channel
-// 	output [AXI_ADDR_WIDTH-1 : 0] axi_awaddr, // address
-// 	output [2 : 0] axi_awprot, // protection type
-// 	output axi_awvalid, // address valid
-// 	input  axi_awready, // address ready
-// 	output [AXI_DATA_WIDTH-1 : 0] axi_wdata, // write data
-// 	output [AXI_DATA_WIDTH/8-1 : 0] axi_wstrb, // write strobe
-// 	output axi_wvalid, // write valid
-// 	input  axi_wready, // write ready
-// 	input  [1 : 0] axi_bresp, // write response
-// 	input  axi_bvalid, // write response valid
-// 	output axi_bready, // write response ready
-// 	// -- read channel
-// 	output [AXI_ADDR_WIDTH-1 : 0] axi_araddr, // address
-// 	output [2 : 0] axi_arprot, // protection type
-// 	output axi_arvalid, // address valid
-// 	input  axi_arready, // address ready
-// 	input  [AXI_DATA_WIDTH-1 : 0] axi_rdata, // read data
-// 	input  [1 : 0] axi_rresp, // read response
-// 	input  axi_rvalid, // read valid
-// 	output axi_rready // read ready
-// );
-// 	// ================= AXI4 interface =================
-
-// 	// ######## registers ########
-// 	// write transaction
-// 	reg r_axi_awvalid, r_axi_wvalid, r_axi_bready;
-// 	// read transaction
-// 	reg r_axi_arvalid, r_axi_rready;
-// 	//write address
-// 	reg [AXI_ADDR_WIDTH-1 : 0] 	r_axi_awaddr;
-// 	//write data
-// 	reg [AXI_DATA_WIDTH-1 : 0] 	r_axi_wdata;
-// 	//read addresss
-// 	reg [AXI_ADDR_WIDTH-1 : 0] 	r_axi_araddr;
-
-// 	reg r_addr_valid, r_addr_valid_delayed;
-// 	wire w_raise_addr_valid;
-// 	reg r_wdata_valid, r_wdata_valid_delayed;
-// 	wire w_raise_wdata_valid;
-// 	wire w_read_start, w_write_start;
-
-// 	// ######## IO connections ########
-// 	assign axi_awaddr	= r_axi_awaddr;
-// 	//axi 4 write data
-// 	assign axi_wdata	= r_axi_wdata;
-// 	assign axi_awprot	= 3'b000;
-// 	assign axi_awvalid	= r_axi_awvalid;
-// 	//write data(w)
-// 	assign axi_wvalid	= r_axi_wvalid;
-// 	// consider only word write
-// 	assign axi_wstrb	= 4'b1111;
-// 	//write response (b)
-// 	assign axi_bready	= r_axi_bready;
-// 	//read address (ar)
-// 	assign axi_araddr	= r_axi_araddr;
-// 	assign axi_arvalid	= r_axi_arvalid;
-// 	assign axi_arprot	= 3'b001;
-// 	//read and read response (r)
-// 	assign axi_rready	= r_axi_rready;
-
-// 	// internal control signal
-// 	// edge detection
-// 	assign w_raise_addr_valid = (!i_addr_valid) && r_addr_valid;
-// 	assign w_raise_wdata_valid = (!i_wdata_valid) && r_wdata_valid;
-
-// 	// to/from core registers
-// 	reg [AXI_DATA_WIDTH-1:0] r_read_data;
-// 	assign o_read_data = r_read_data;
-
-// 	assign o_ready = r_axi_rready | r_axi_bready;
-
-// 	always @(posedge clk) begin
-// 		if (!reset_n) begin
-// 			r_addr_valid <= 1'b0;
-// 			r_addr_valid_delayed <= 1'b0;
-// 			r_wdata_valid <= 1'b0;
-// 			r_wdata_valid_delayed <= 1'b0;
-// 		end else begin
-// 			r_addr_valid <= i_addr_valid;
-// 			r_addr_valid_delayed <= r_addr_valid;
-// 			r_wdata_valid <= i_wdata_valid;
-// 			r_wdata_valid_delayed <= r_wdata_valid;
-// 		end
-// 	end
-
-// 	// ######## write address channel ########
-// 	always @(posedge clk) begin
-// 		if (!reset_n) begin
-// 			r_axi_awvalid <= `DISABLE;
-// 		end else begin
-// 			if (w_raise_addr_valid && i_write_enable) begin
-// 				r_axi_awvalid <= `ENABLE;
-// 			end else if (axi_awready && r_axi_awvalid) begin
-// 				// keep aserted until the slave accepts the address
-// 				r_axi_awvalid <= `DISABLE;
-// 			end
-// 		end
-// 	end
-
-// 	// ######## Write data channel ########
-// 	always @(posedge clk) begin
-// 		if (!reset_n) begin
-// 			r_axi_wvalid <= `DISABLE;
-// 		end else if (w_raise_wdata_valid) begin
-// 			//Signal a new address/data command is available by user logic
-// 			r_axi_wvalid <= `ENABLE;
-//  		end else if (axi_wready && r_axi_wvalid) begin
-// 			//Data accepted by interconnect/slave (issue of M_AXI_WREADY by slave)
-// 			r_axi_wvalid <= `DISABLE;
-// 		end
-// 	end
-
-
-// 	// ######## Write response channel ########
-// 	always @(posedge clk) begin
-// 		if (!reset_n) begin
-// 			r_axi_bready <= `DISABLE;
-// 		end else if (axi_bvalid && ~r_axi_bready) begin
-// 			// accept/acknowledge bresp with r_axi_bready by the master
-// 			// when axi_bvalid is asserted by slave
-// 			r_axi_bready <= `ENABLE;
-// 		end else if (r_axi_bready) begin
-// 		// deassert after one clock cycle
-// 			r_axi_bready <= `DISABLE;
-// 		end
-// 	end
-
-
-// 	// ######## Read address channel ########
-// 	always @(posedge clk) begin
-// 		if (!reset_n) begin
-// 			r_axi_arvalid <= `DISABLE;
-// 		end else if (w_raise_addr_valid && ~i_write_enable) begin
-// 			//Signal a new read address command is available by user logic
-// 			r_axi_arvalid <= `ENABLE;
-// 		end	else if (axi_arready && r_axi_arvalid) begin
-// 			//RAddress accepted by interconnect/slave (issue of M_AXI_ARREADY by slave)
-// 			r_axi_arvalid <= `DISABLE;
-// 		end
-// 		// retain the previous value
-// 	end
-
-// 	// ######## Read data channel ########
-// 	always @(posedge clk) begin
-// 		if (!reset_n) begin
-// 			r_axi_rready <= `DISABLE;
-// 		end else if (axi_rready && ~r_axi_rready) begin
-// 			r_axi_rready <= `ENABLE;
-// 		end else if (r_axi_rready) begin
-// 			// assert r_axi_rready for one clock cycle
-// 			r_axi_rready <= `DISABLE;
-// 		end
-// 		// retain the previous value
-// 	end
-
-// 	always @(posedge clk) begin
-// 		if (!reset_n) begin
-// 			r_read_data <= 0;
-// 		end else begin
-// 			if (axi_rvalid) begin
-// 				r_read_data <= axi_rdata;
-// 			end
-// 		end
-// 	end
-
-
-// 	// latch signals
-// 	// Write data & address
-// 	always @(posedge clk) begin
-// 		if (!reset_n) begin
-// 			r_axi_wdata <= 0;
-// 		end else if (w_raise_wdata_valid) begin
-// 			r_axi_wdata	<= i_write_data;
-// 		end
-// 	end
-
-// 	always @(posedge clk) begin
-// 		if (!reset_n) begin
-// 			r_axi_awaddr <= 0;
-// 		end else if (w_raise_addr_valid && i_write_enable) begin
-// 			r_axi_awaddr <= i_addr;
-// 		end
-// 	end
-
-// 	//Read Addresses
-// 	always @(posedge clk) begin
-// 		if (!reset_n) begin
-// 			r_axi_araddr <= 0;
-// 		end else if (w_raise_addr_valid && ~i_write_enable) begin
-// 			r_axi_araddr <= i_addr;
-// 		end
-// 	end
-// endmodule

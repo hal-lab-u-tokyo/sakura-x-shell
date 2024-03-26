@@ -5,7 +5,7 @@
 //    Project:       tkojima
 //    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
 //    Created Date:  14-03-2024 14:21:17
-//    Last Modified: 21-03-2024 10:03:52
+//    Last Modified: 25-03-2024 14:15:09
 //
 
 `timescale 1ns / 1ps
@@ -47,6 +47,16 @@ module ctrl_top #(
 	input [`WORD_B] i_read_data
 );
 	wire clk;
+	wire w_sw_reset_n;
+
+	wire w_blinker_led;
+	blinker #(
+		.MSB(26) // blink per 1.34 sec when 50MHz
+	) blinker0 (
+		.clk(clk),
+		.reset_n(reset_n),
+		.led(w_blinker_led)
+	);
 
 	// Buffer -> FTDI
 	wire w_buf2ftdi_empty;
@@ -89,6 +99,7 @@ module ctrl_top #(
 	);
 
 	// interface to FT2232H
+	wire w_ftdi_interface_busy;
 	ft2232_fifo_interface #(
 		.SYSCLOCK_PERIOD(SYSCLOCK_PERIOD)
 	) ft2232_interface0 (
@@ -106,10 +117,13 @@ module ctrl_top #(
 		.o_fifo_read_enable(w_ftdi2buf_read_enable),
 		.o_fifo_write_data(w_ftdi2buf_data),
 		.i_fifo_full(w_buf2ftdi_full),
-		.o_fifo_write_enable(w_ftdi2buf_write_enable)
+		.o_fifo_write_enable(w_ftdi2buf_write_enable),
+		// status
+		.o_busy(w_ftdi_interface_busy)
 	);
 
 	// bridge between interconnect and FIFO while decoding commands
+	wire w_comand_control_busy;
 	command_control command_control0 (
 		.clk(clk),
 		.reset_n(reset_n),
@@ -131,7 +145,11 @@ module ctrl_top #(
 		.i_read_data_valid(i_read_data_valid),
 		.o_read_data_ready(o_read_data_ready),
 		.o_common(o_common),
-		.i_read_data(i_read_data)
+		.i_read_data(i_read_data),
+		// soft reset
+		.o_sw_reset_n(w_sw_reset_n),
+		// status
+		.o_busy(w_comand_control_busy)
 	);
 
 	// sys clock generation using PLL IP
@@ -159,9 +177,12 @@ module ctrl_top #(
 	assign o_ftdi_siwua = `DISABLE;
 
 
-	assign o_led = i_read_data[9:0];
+	// LED mapping
+	// | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+	// | buf(in) full | buf(in) empty | buf(out) full | buf(out) empty | interface busy | command busy | blinker | N/A | N/A | N/A |
+	assign o_led = {3'b0, w_blinker_led, w_comand_control_busy, w_ftdi_interface_busy, w_buf2bridge_empty, w_buf2ftdi_full, w_buf2ftdi_empty, w_buf2bridge_full};
 
-	assign o_bus_reset_n = reset_n;
+	assign o_bus_reset_n = reset_n & w_sw_reset_n;
 
 	// interconnect clock
 `ifdef SIM
@@ -170,5 +191,25 @@ module ctrl_top #(
 	ODDR2 u0 (.D0(1'b0), .D1(1'b1), .C0(clk), .C1(~clk),
 				.Q(o_bus_clk),    .CE(1'b1), .R(1'b0), .S(1'b0));
 `endif
+
+endmodule
+
+module blinker #(
+	parameter MSB = 26
+) (
+	input clk,
+	input reset_n,
+	output led
+);
+	reg [MSB:0] r_counter;
+	always @(posedge clk or negedge reset_n) begin
+		if (!reset_n) begin
+			r_counter <= 0;
+		end else begin
+			r_counter <= r_counter + 1;
+		end
+	end
+
+	assign led = r_counter[MSB];
 
 endmodule
