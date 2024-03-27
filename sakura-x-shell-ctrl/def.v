@@ -1,11 +1,11 @@
 //
 //    Copyright (C) 2024 The University of Tokyo
-//    
-//    File:          /workspace/sakura-x-shell/sakura-x-shell-ctrl/def.v
-//    Project:       tkojima
+//
+//    File:          /sakura-x-shell-ctrl/def.v
+//    Project:       sakura-x-shell
 //    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
-//    Created Date:  21-03-2024 10:09:49
-//    Last Modified: 21-03-2024 10:09:50
+//    Created Date:  27-03-2024 20:57:37
+//    Last Modified: 27-03-2024 20:57:37
 //
 
 

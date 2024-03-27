@@ -1,11 +1,11 @@
 //
 //    Copyright (C) 2024 The University of Tokyo
-//    
-//    File:          /workspace/sakura-x-shell/sakura-x-shell-ctrl/ft2232h_interface.v
-//    Project:       tkojima
+//
+//    File:          /sakura-x-shell-ctrl/ft2232h_interface.v
+//    Project:       sakura-x-shell
 //    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
-//    Created Date:  15-03-2024 12:13:21
-//    Last Modified: 25-03-2024 14:15:11
+//    Created Date:  27-03-2024 20:57:52
+//    Last Modified: 27-03-2024 20:57:52
 //
 
 `include "def.v"

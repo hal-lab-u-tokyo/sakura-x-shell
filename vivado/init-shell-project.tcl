@@ -1,12 +1,13 @@
 #
 #    Copyright (C) 2024 The University of Tokyo
 #
-#    File:          /workspace/sakura-x-shell/vivado/init-shell-project.tcl
-#    Project:       tkojima
+#    File:          /vivado/init-shell-project.tcl
+#    Project:       sakura-x-shell
 #    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
-#    Created Date:  26-03-2024 14:05:56
-#    Last Modified: 26-03-2024 15:53:14
+#    Created Date:  27-03-2024 20:56:01
+#    Last Modified: 27-03-2024 20:56:01
 #
+
 
 # default settings
 variable design_name
@@ -100,7 +101,6 @@ tkojima.me:user:controler_AXI:1.0\
 xilinx.com:ip:proc_sys_reset:5.0\
 xilinx.com:ip:mig_7series:4.2\
 xilinx.com:ip:xlslice:1.0\
-xilinx.com:ip:axi_register_slice:2.1\
 "
 set list_ips_missing ""
 common::send_gid_msg -ssname BD::TCL -id 2011 -severity "INFO" "Checking if the following IPs exist in the project's IP catalog: $list_check_ips ."
@@ -208,10 +208,6 @@ proc create_root_design { parentCell enable_mig } {
 	}
 	set_property -dict $pll_prop $pll
 
-	# Create instance: axi_register_slice_0, and set properties
-	set axi_register_slice_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 axi_register_slice_0 ]
-
-
 	# Create instance: xlconstant_0, and set properties
 	set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
 
@@ -234,6 +230,7 @@ proc create_root_design { parentCell enable_mig } {
 	} else {
 	set_property CONFIG.NUM_MI {2} $controler_AXI_0_axi_periph
 	}
+	set_property CONFIG.S00_HAS_REGSLICE {1} [get_bd_cells controler_AXI_0_axi_periph]
 
 	# Create instance: rst_pll_100M, and set properties
 	set rst_pll_100M [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_pll_100M ]
@@ -246,9 +243,8 @@ proc create_root_design { parentCell enable_mig } {
 	] $xlslice_0
 
 	# Create interface connections
-	connect_bd_intf_net -intf_net axi_register_slice_0_M_AXI [get_bd_intf_pins axi_register_slice_0/M_AXI] [get_bd_intf_pins axi_led/S_AXI]
 	connect_bd_intf_net -intf_net controler_AXI_0_M_AXI [get_bd_intf_pins controler_AXI_0/M_AXI] [get_bd_intf_pins controler_AXI_0_axi_periph/S00_AXI]
-	connect_bd_intf_net -intf_net controler_AXI_0_axi_periph_M00_AXI [get_bd_intf_pins controler_AXI_0_axi_periph/M00_AXI] [get_bd_intf_pins axi_register_slice_0/S_AXI]
+	connect_bd_intf_net -intf_net controler_AXI_0_axi_periph_M00_AXI [get_bd_intf_pins controler_AXI_0_axi_periph/M00_AXI] [get_bd_intf_pins axi_led/S_AXI]
 	connect_bd_intf_net -intf_net i_osc_clk_1 [get_bd_intf_ports i_osc] [get_bd_intf_pins pll/CLK_IN1_D]
 
 	# Create port connections
@@ -264,8 +260,8 @@ proc create_root_design { parentCell enable_mig } {
 	connect_bd_net -net i_read_data_ready_1 [get_bd_ports i_read_data_ready] [get_bd_pins controler_AXI_0/i_read_data_ready]
 	connect_bd_net -net i_write_data_valid_1 [get_bd_ports i_write_data_valid] [get_bd_pins controler_AXI_0/i_write_data_valid]
 	connect_bd_net -net i_write_enable_1 [get_bd_ports i_write_enable] [get_bd_pins controler_AXI_0/i_write_enable]
-	connect_bd_net -net pll_clk_out1 [get_bd_pins pll/clk_out1] [get_bd_pins axi_led/s_axi_aclk] [get_bd_pins controler_AXI_0_axi_periph/M00_ACLK] [get_bd_pins rst_pll_100M/slowest_sync_clk] [get_bd_pins controler_AXI_0_axi_periph/ACLK] [get_bd_pins axi_register_slice_0/aclk]
-	connect_bd_net -net rst_pll_100M_peripheral_aresetn [get_bd_pins rst_pll_100M/peripheral_aresetn] [get_bd_pins axi_led/s_axi_aresetn] [get_bd_pins controler_AXI_0_axi_periph/M00_ARESETN] [get_bd_pins controler_AXI_0_axi_periph/ARESETN] [get_bd_pins axi_register_slice_0/aresetn]
+	connect_bd_net -net pll_clk_out1 [get_bd_pins pll/clk_out1] [get_bd_pins axi_led/s_axi_aclk] [get_bd_pins controler_AXI_0_axi_periph/M00_ACLK] [get_bd_pins rst_pll_100M/slowest_sync_clk] [get_bd_pins controler_AXI_0_axi_periph/ACLK] 
+	connect_bd_net -net rst_pll_100M_peripheral_aresetn [get_bd_pins rst_pll_100M/peripheral_aresetn] [get_bd_pins axi_led/s_axi_aresetn] [get_bd_pins controler_AXI_0_axi_periph/M00_ARESETN] [get_bd_pins controler_AXI_0_axi_periph/ARESETN]
 	connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_ports o_clk_osc_inh_n]
 	connect_bd_net -net xlslice_0_Dout [get_bd_pins xlslice_0/Dout] [get_bd_ports o_led]
 

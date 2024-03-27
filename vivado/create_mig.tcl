@@ -1,3 +1,13 @@
+#
+#    Copyright (C) 2024 The University of Tokyo
+#
+#    File:          /vivado/create_mig.tcl
+#    Project:       sakura-x-shell
+#    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
+#    Created Date:  27-03-2024 20:55:50
+#    Last Modified: 27-03-2024 20:55:51
+#
+
 ##################################################################
 # MIG PRJ FILE TCL PROCs
 ##################################################################

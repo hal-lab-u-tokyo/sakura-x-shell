@@ -1,12 +1,13 @@
 //
 //    Copyright (C) 2024 The University of Tokyo
-//    
-//    File:          /workspace/sakura-x-shell/ip_repo/controler_AXI_1_0/hdl/controler_AXI_v1_0.v
-//    Project:       tkojima
-//    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
-//    Created Date:  21-03-2024 12:33:32
-//    Last Modified: 21-03-2024 12:33:32
 //
+//    File:          /ip_repo/controler_AXI_1_0/hdl/controler_AXI_v1_0.v
+//    Project:       sakura-x-shell
+//    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
+//    Created Date:  27-03-2024 21:00:57
+//    Last Modified: 27-03-2024 21:00:57
+//
+
 
 
 `timescale 1 ns / 1 ps
