@@ -4,7 +4,7 @@
 
 #================================================�@Timing constraint
 # k_clk_osc_p<0>, k_clk_osc_n<0> : 200.000MHz
-create_clock -period 5.000 -name i_osc_clk_p -waveform {0.000 2.500} [get_ports i_clk_osc_p]
+create_clock -period 5.000 -name i_osc_clk_p -waveform {0.000 2.500} [get_ports i_osc_clk_p]
 
 # k_clk_osc_p<1>, k_clk_osc_n<1> : 200.000MHz
 # create_clock -period 5.000 -name clk_osc1_p -waveform {0.000 2.500} [get_ports clk_osc1_p]
