@@ -101,11 +101,15 @@ connect_bd_intf_net -intf_net controler_AXI_0_axi_periph_M01_AXI [get_bd_intf_pi
 # port connections
 connect_bd_net -net aes_rtl_core_0_o_running [get_bd_pins aes_rtl_core_0/o_running] [get_bd_ports running]
 
+# connect nets
 connect_bd_net -net pll_clk_out2 [get_bd_pins pll/clk_out2] [get_bd_pins controler_AXI_0_axi_periph/M01_ACLK] [get_bd_pins rst_pll_aes/slowest_sync_clk] [get_bd_pins aes_rtl_core_0/s00_axi_aclk]
 
 connect_bd_net -net rst_pll_aes_peripheral_aresetn [get_bd_pins rst_pll_aes/peripheral_aresetn] [get_bd_pins controler_AXI_0_axi_periph/M01_ARESETN] [get_bd_pins aes_rtl_core_0/s00_axi_aresetn]
 
-connect_bd_net [get_bd_ports i_bus_reset_n] [get_bd_pins pll/resetn] [get_bd_pins rst_pll_aes/ext_reset_in]
+connect_bd_net [get_bd_ports i_bus_reset_n] [get_bd_pins rst_pll_aes/ext_reset_in]
+
+connect_bd_net -net pll_locked [get_bd_pins pll/locked] [get_bd_pins rst_pll_aes/dcm_locked]
+
 
 # Create address segments
 assign_bd_address -offset 0x8000_0000 -range 0x00010000 -target_address_space [get_bd_addr_spaces controler_AXI_0/M_AXI] [get_bd_addr_segs aes_rtl_core_0/S00_AXI/S00_AXI_reg] -force

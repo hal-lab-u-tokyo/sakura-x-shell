@@ -24,5 +24,5 @@ The template block design includes the following components:
 * Clocking Wizard: which generates 100MHz clock for 200MHz differential clock from external oscillator
 * AXI GPIO: which provides GPIO interface to control LEDs on SAKURA-X
 
-<img src="./images/template_block_design.png" width="800" />
+<img src="./images/template_block_design.png" width="800"  style="display: block; margin: auto;" />
 

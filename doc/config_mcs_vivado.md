@@ -12,7 +12,7 @@ If you have already created an MCS file or use pre-built example files, you can 
 
 2. Select "Generate Memory Configuration File" from the "Tools" menu
 
-<img src="./images/make_mcs_vivado.png" width="400" />
+<img src="./images/make_mcs_vivado.png" width="400"  style="display: block; margin: auto;" />
 
 3. Select "MCS" as format type and "28f128p30t-bpi-x16" as Memory Part.
 Then, set your preferred output filename.
@@ -23,7 +23,7 @@ Then, set your preferred output filename.
 
 6. Click "OK" to generate the MCS file.
 
-<img src="./images/make_mcs_details_vivado.png" width="400" />
+<img src="./images/make_mcs_details_vivado.png" width="400"  style="display: block; margin: auto;" />
 
 ## Program Flash Memory
 
@@ -33,19 +33,19 @@ Then, set your preferred output filename.
 
 3. Right-click on the FPGA device "xc7k160t" and select "Add Configuration Memory Device"
 
-<img src="./images/add_mem_device_hardware_manager.png" width="400" />
+<img src="./images/add_mem_device_hardware_manager.png" width="400"  style="display: block; margin: auto;" />
 
 
 4. Select "28f128p30t-bpi-x16" as the memory part and click "OK"
 
-<img src="./images/select_mem_devive_hardware_manager.png" width="400" />
+<img src="./images/select_mem_devive_hardware_manager.png" width="400"  style="display: block; margin: auto;" />
 
 If the dialog as below appears, click "OK".
 
-<img src="./images/add_mem_device_dialog_hardware_manager.png" width="400" />
+<img src="./images/add_mem_device_dialog_hardware_manager.png" width="400"  style="display: block; margin: auto;" />
 
 5. Select the generated MCS file and click "OK". "Erase", "Program", and "Verify" should be checked.
 After that, if no error occurs, the flash memory successfully programmed.
 
-<img src="./images/select_mcs_file_hardware_manager.png" width="400" />
+<img src="./images/select_mcs_file_hardware_manager.png" width="400"  style="display: block; margin: auto;" />
 
