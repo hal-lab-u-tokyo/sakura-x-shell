@@ -1,3 +1,5 @@
+# Configuration with iMPACT
+
 ## Use Xilinx Platform Cable USB II with ISE
 
 ### Issues
