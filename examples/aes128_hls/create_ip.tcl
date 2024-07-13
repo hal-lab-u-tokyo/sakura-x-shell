@@ -1,3 +1,14 @@
+#
+#    Copyright (C) 2024 The University of Tokyo
+#    
+#    File:          /examples/aes128_hls/create_ip.tcl
+#    Project:       sakura-x-shell
+#    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
+#    Created Date:  14-07-2024 04:12:07
+#    Last Modified: 14-07-2024 04:12:08
+#
+
+
 open_project -reset hls_sakura_aes_enc
 
 # Add design files

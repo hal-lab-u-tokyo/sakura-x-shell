@@ -1,3 +1,14 @@
+/*
+*    Copyright (C) 2024 The University of Tokyo
+*    
+*    File:          /examples/aes128_hls/test/test_aes.cpp
+*    Project:       sakura-x-shell
+*    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
+*    Created Date:  14-07-2024 04:11:57
+*    Last Modified: 14-07-2024 04:11:59
+*/
+
+
 #include <stdio.h>
 
 #define SIZE 16
