@@ -58,8 +58,18 @@ After creating a project with the template, as described above, you can create a
 source <path to this repo>/examples/aes128_rtl/create_bd.tcl
 ```
 
-
 ### HLS implementation of AES 128-bit encryption
+
+Corresponding HLS code is also available in [examples/aes128_hls](./examples/aes128_hls).
+
+To create an IP core from the HLS code, go to the directory and run the following command:
+```bash
+vitis_hls -f create_ip.tcl
+```
+Then, the HLS project will be created in the `hls_sakura_aes_enc`.
+The generated IP core depends on the target frequency.
+The above tcl script sets the target frequency to 50MHz.
+
 
 ### VexRiscv on SAKURA-X
 
