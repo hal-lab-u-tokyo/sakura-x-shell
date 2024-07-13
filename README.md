@@ -21,6 +21,7 @@ The template optionally includes a Memory Interface Generator (MIG) IP to use DD
 ## Project for Spartan-6
 [sakura-x-shell-ctrl](./sakura-x-shell-ctrl) includes ISE project for Spartan-6 FPGA.
 In addition, pre-built bitstream file and MCS file are included in that directory.
+The pre-built design is clocked at 50 MHz.
 Please see [Configuration with iMPACT](./doc/config_with_impact.md) to configure the Spartan-6 FPGA.
 
 ## Create a template project for Kintex-7
@@ -50,6 +51,13 @@ For more details, see [here](https://github.com/hal-lab-u-tokyo/chipwhisperer-en
 
 ## Design examples
 ### RTL implementation of AES 128-bit encryption
+[ip_repo](./vivado/ip_repo) contains an IP core wrapping sasebo-giii AES core developed by AIST.
+
+After creating a project with the template, as described above, you can create a block design by running the following command in the Vivado Tcl console.
+```tcl
+source <path to this repo>/examples/aes128_rtl/create_bd.tcl
+```
+
 
 ### HLS implementation of AES 128-bit encryption
 
