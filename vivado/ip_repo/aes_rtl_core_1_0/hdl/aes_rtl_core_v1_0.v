@@ -26,6 +26,7 @@ module aes_rtl_core_v1_0 #
 (
 	// Users to add ports here
 	output o_running,
+
 	// User ports ends
 	// Do not modify the ports beyond this line
 

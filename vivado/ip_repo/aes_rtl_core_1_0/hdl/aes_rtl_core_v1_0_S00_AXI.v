@@ -27,6 +27,7 @@ module aes_rtl_core_v1_0_S00_AXI #
 (
 	// Users to add ports here
 	output o_running,
+
 	// User ports ends
 	// Do not modify the ports beyond this line
 
@@ -93,7 +94,6 @@ module aes_rtl_core_v1_0_S00_AXI #
 );
 
 	wire [127:0] w_key, w_plaintext, w_ciphertext;
-	reg [3:0] r_key_written, r_plaintext_written;
 	wire w_key_ready, w_plaintext_ready;
 	wire w_key_valid, w_ciphertext_valid;
 	reg r_key_ready, r_plaintext_ready;
@@ -121,18 +121,18 @@ module aes_rtl_core_v1_0_S00_AXI #
 	//-- Signals for user logic register space example
 	//------------------------------------------------
 	//-- Number of Slave Registers 8 (rest 4 words are read-only)
-	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg0;
+	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg0; // key LSB
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg1;
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg2;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg3;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg4;
+	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg3; // key MSB
+	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg4; // plaintext LSB
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg5;
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg6;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg7;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg8;
+	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg7; // plaintext MSB
+	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg8; // ciphertext LSB
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg9;
 	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg10;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg11;
+	reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg11; // ciphertext MSB
 
 	wire	 slv_reg_rden;
 	wire	 slv_reg_wren;
@@ -235,8 +235,8 @@ module aes_rtl_core_v1_0_S00_AXI #
 			slv_reg9 <= 0;
 			slv_reg10 <= 0;
 			slv_reg11 <= 0;
-			r_key_written <= 0;
-			r_plaintext_written <= 0;
+			r_key_ready <= 1'b0;
+			r_plaintext_ready <= 1'b0;
 		end else begin
 			if (slv_reg_wren) begin
 				case ( axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] )
@@ -247,7 +247,6 @@ module aes_rtl_core_v1_0_S00_AXI #
 							// Slave register 0
 							slv_reg0[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 						end
-						r_key_written[0] <= 1'b1;
 					end
 					4'h1: begin
 						for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
@@ -256,7 +255,6 @@ module aes_rtl_core_v1_0_S00_AXI #
 							// Slave register 1
 							slv_reg1[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 						end
-						r_key_written[1] <= 1'b1;
 					end
 					4'h2: begin
 						for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
@@ -265,7 +263,6 @@ module aes_rtl_core_v1_0_S00_AXI #
 							// Slave register 2
 							slv_reg2[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 						end
-						r_key_written[2] <= 1'b1;
 					end
 					4'h3: begin
 						for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
@@ -274,7 +271,6 @@ module aes_rtl_core_v1_0_S00_AXI #
 							// Slave register 3
 							slv_reg3[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 						end
-						r_key_written[3] <= 1'b1;
 					end
 					4'h4: begin
 						for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
@@ -283,7 +279,6 @@ module aes_rtl_core_v1_0_S00_AXI #
 							// Slave register 4
 							slv_reg4[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 						end
-						r_plaintext_written[0] <= 1'b1;
 					end
 					4'h5: begin
 						for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
@@ -292,7 +287,6 @@ module aes_rtl_core_v1_0_S00_AXI #
 							// Slave register 5
 							slv_reg5[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 						end
-						r_plaintext_written[1] <= 1'b1;
 					end
 					4'h6: begin
 						for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
@@ -301,7 +295,6 @@ module aes_rtl_core_v1_0_S00_AXI #
 							// Slave register 6
 							slv_reg6[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 						end
-						r_plaintext_written[2] <= 1'b1;
 					end
 					4'h7: begin
 						for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
@@ -310,7 +303,12 @@ module aes_rtl_core_v1_0_S00_AXI #
 							// Slave register 7
 							slv_reg7[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 						end
-						r_plaintext_written[3] <= 1'b1;
+					end
+					// 8-11 are read-only
+					4'hC: begin
+						if (S_AXI_WSTRB[0]) begin
+							{r_key_ready, r_plaintext_ready} <= S_AXI_WDATA[1:0];
+						end
 					end
 					default : begin
 							slv_reg0 <= slv_reg0;
@@ -324,11 +322,11 @@ module aes_rtl_core_v1_0_S00_AXI #
 					end
 				endcase
 			end else begin
-				if (w_key_ready) begin
-					r_key_written <= 0;
+				if (r_key_ready) begin
+					r_key_ready <= 1'b0;
 				end
-				if (w_plaintext_ready) begin
-					r_plaintext_written <= 0;
+				if (r_plaintext_ready) begin
+					r_plaintext_ready <= 1'b0;
 				end
 			end
 			if (w_ciphertext_valid) begin
@@ -428,6 +426,7 @@ module aes_rtl_core_v1_0_S00_AXI #
 			4'h9   : reg_data_out <= slv_reg9;
 			4'hA   : reg_data_out <= slv_reg10;
 			4'hB   : reg_data_out <= slv_reg11;
+			4'hC   : reg_data_out <= {32'b0, r_key_ready, r_plaintext_ready};
 			default : reg_data_out <= 0;
 		endcase
 	end
@@ -450,16 +449,18 @@ module aes_rtl_core_v1_0_S00_AXI #
 	assign w_key = {slv_reg3, slv_reg2, slv_reg1, slv_reg0};
 	assign w_plaintext = {slv_reg7, slv_reg6, slv_reg5, slv_reg4};
 
-	assign w_key_ready = &r_key_written;
-	assign w_plaintext_ready = &r_plaintext_written;
+	reg r_key_ready_delay, r_plaintext_ready_delay;
+
+	assign w_key_ready = r_key_ready & !r_key_ready_delay;
+	assign w_plaintext_ready = r_plaintext_ready & !r_plaintext_ready_delay;
 
 	always @( posedge S_AXI_ACLK ) begin
 		if ( S_AXI_ARESETN == 1'b0 ) begin
-			r_key_ready <= 0;
-			r_plaintext_ready <= 0;
+			r_key_ready_delay <= 1'b0;
+			r_plaintext_ready_delay <= 1'b0;
 		end else begin
-			r_key_ready <= w_key_ready;
-			r_plaintext_ready <= w_plaintext_ready;
+			r_key_ready_delay <= r_key_ready;
+			r_plaintext_ready_delay <= r_plaintext_ready;
 		end
 	end
 
@@ -469,8 +470,8 @@ module aes_rtl_core_v1_0_S00_AXI #
 		.Kin(w_key),
 		.Din(w_plaintext),
 		.Dout(w_ciphertext),
-		.Krdy(!r_key_ready & w_key_ready),
-		.Drdy(!r_plaintext_ready & w_plaintext_ready),
+		.Krdy(w_key_ready),
+		.Drdy(w_plaintext_ready),
 		.Kvld(w_key_valid),
 		.Dvld(w_ciphertext_valid),
 		.EN(1'b1),

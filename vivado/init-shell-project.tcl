@@ -51,7 +51,7 @@ if { $::argc > 0 } {
 		switch -regexp -- $option {
 			"--project-dir"  { incr i; set project_dir [lindex $::argv $i] }
 			"--project-name" { incr i; set project_name [lindex $::argv $i] }
-		"--with-mig"	   { set enable_mig 1 }
+			"--with-mig"	   { set enable_mig 1 }
 			"--help"         { print_help }
 			default {
 				if { [regexp {^-} $option] } {
@@ -193,7 +193,7 @@ proc create_root_design { parentCell enable_mig } {
 		CONFIG.PRIM_SOURCE {Differential_clock_capable_pin} \
 		CONFIG.RESET_PORT {resetn} \
 		CONFIG.RESET_TYPE {ACTIVE_LOW} \
-		CONFIG.USE_LOCKED {false} \
+		CONFIG.USE_LOCKED {true} \
 	]
 	set mig_clock_prop [list CONFIG.CLKOUT2_JITTER {98.146} \
 		CONFIG.CLKOUT2_PHASE_ERROR {89.971} \
@@ -262,6 +262,7 @@ proc create_root_design { parentCell enable_mig } {
 	connect_bd_net -net i_write_enable_1 [get_bd_ports i_write_enable] [get_bd_pins controler_AXI_0/i_write_enable]
 	connect_bd_net -net pll_clk_out1 [get_bd_pins pll/clk_out1] [get_bd_pins axi_led/s_axi_aclk] [get_bd_pins controler_AXI_0_axi_periph/M00_ACLK] [get_bd_pins rst_pll_100M/slowest_sync_clk] [get_bd_pins controler_AXI_0_axi_periph/ACLK] 
 	connect_bd_net -net rst_pll_100M_peripheral_aresetn [get_bd_pins rst_pll_100M/peripheral_aresetn] [get_bd_pins axi_led/s_axi_aresetn] [get_bd_pins controler_AXI_0_axi_periph/M00_ARESETN] [get_bd_pins controler_AXI_0_axi_periph/ARESETN]
+	connect_bd_net -net pll_locked [get_bd_pins pll/locked] [get_bd_pins rst_pll_100M/dcm_locked]
 	connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_ports o_clk_osc_inh_n]
 	connect_bd_net -net xlslice_0_Dout [get_bd_pins xlslice_0/Dout] [get_bd_ports o_led]
 
