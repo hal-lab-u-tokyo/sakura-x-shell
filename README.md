@@ -114,7 +114,9 @@ The base address of s_axi_control is 0x8000_0000 in the example design.
 (SC = Self Clear, COR = Clear on Read, TOW = Toggle on Write, COH = Clear on Handshake)
 
 ### VexRiscv on SAKURA-X
-To be added.
+32bit RISC-V core, VexRiscv, is also available on SAKURA-X.
+
+See [VexRiscv_SAKURA-X repo](https://github.com/hal-lab-u-tokyo/VexRiscv_SakuraX) for more details.
 
 ## License
 
