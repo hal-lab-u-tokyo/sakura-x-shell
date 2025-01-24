@@ -1,0 +1,3 @@
+[submodule "examples/ip_repo"]
+	path = examples/ip_repo
+	url = https://github.com/hal-lab-u-tokyo/sca_design_repo

@@ -1,3 +1,14 @@
+#
+#    Copyright (C) 2025 The University of Tokyo
+#    
+#    File:          /examples/aes128_hls/create_bd.tcl
+#    Project:       sakura-x-shell
+#    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
+#    Created Date:  25-01-2025 04:41:33
+#    Last Modified: 25-01-2025 04:42:16
+#
+
+
 variable design_name
 set design_name main
 
@@ -16,7 +27,7 @@ current_bd_design $design_name
 # check IP
 set aes_hls_core_ip "xilinx.com:hls:AES128Encrypt:1.0"
 
-set aes_hls_core_ip_repo [file normalize [file join $scriptDir "hls/hls_sakura_aes_enc/solution0/impl/ip"]]
+set aes_hls_core_ip_repo [file normalize [file join $scriptDir "hls_sakura-x_aes_enc/solution0/impl/ip"]]
 set src_set [current_fileset -quiet]
 set current_ip_repo_paths [get_property "ip_repo_paths" $src_set]
 # append
@@ -82,11 +93,11 @@ set_property -dict [list \
 ] $pll
 
 # change AXI interconect
-set controler_AXI_0_axi_periph [ get_bd_cells controler_AXI_0_axi_periph ]
+set controller_AXI_0_axi_periph [ get_bd_cells controller_AXI_0_axi_periph ]
 set_property -dict [list \
 	CONFIG.NUM_MI {3} \
 	CONFIG.S00_HAS_REGSLICE {1} \
-] $controler_AXI_0_axi_periph
+] $controller_AXI_0_axi_periph
 
 
 # Create instance: rst_pll_aes, and set properties
@@ -123,18 +134,18 @@ connect_bd_intf_net -intf_net axi_bram_ctrl_1_BRAM_PORTA [get_bd_intf_pins axi_b
 
 connect_bd_intf_net -intf_net axi_smc_M00_AXI [get_bd_intf_pins axi_smc/M00_AXI] [get_bd_intf_pins axi_bram_ctrl_0/S_AXI]
 
-connect_bd_intf_net -intf_net controler_AXI_0_axi_periph_M01_AXI [get_bd_intf_pins controler_AXI_0_axi_periph/M01_AXI] [get_bd_intf_pins AES128Encrypt_0/s_axi_control]
+connect_bd_intf_net -intf_net controller_AXI_0_axi_periph_M01_AXI [get_bd_intf_pins controller_AXI_0_axi_periph/M01_AXI] [get_bd_intf_pins AES128Encrypt_0/s_axi_control]
 
-connect_bd_intf_net -intf_net controler_AXI_0_axi_periph_M02_AXI [get_bd_intf_pins controler_AXI_0_axi_periph/M02_AXI] [get_bd_intf_pins axi_bram_ctrl_1/S_AXI]
+connect_bd_intf_net -intf_net controller_AXI_0_axi_periph_M02_AXI [get_bd_intf_pins controller_AXI_0_axi_periph/M02_AXI] [get_bd_intf_pins axi_bram_ctrl_1/S_AXI]
 
 # connect nets
-connect_bd_net [get_bd_pins pll/clk_out1] [get_bd_pins axi_bram_ctrl_1/s_axi_aclk] [get_bd_pins controler_AXI_0_axi_periph/M02_ACLK]
+connect_bd_net [get_bd_pins pll/clk_out1] [get_bd_pins axi_bram_ctrl_1/s_axi_aclk] [get_bd_pins controller_AXI_0_axi_periph/M02_ACLK]
 
-connect_bd_net -net pll_clk_out2 [get_bd_pins pll/clk_out2] [get_bd_pins rst_pll_aes/slowest_sync_clk] [get_bd_pins controler_AXI_0_axi_periph/M01_ACLK] [get_bd_pins axi_smc/aclk] [get_bd_pins axi_bram_ctrl_0/s_axi_aclk] [get_bd_pins AES128Encrypt_0/ap_clk]
+connect_bd_net -net pll_clk_out2 [get_bd_pins pll/clk_out2] [get_bd_pins rst_pll_aes/slowest_sync_clk] [get_bd_pins controller_AXI_0_axi_periph/M01_ACLK] [get_bd_pins axi_smc/aclk] [get_bd_pins axi_bram_ctrl_0/s_axi_aclk] [get_bd_pins AES128Encrypt_0/ap_clk]
 
-connect_bd_net [get_bd_pins rst_pll_100M/peripheral_aresetn] [get_bd_pins axi_bram_ctrl_1/s_axi_aresetn] [get_bd_pins controler_AXI_0_axi_periph/M02_ARESETN]
+connect_bd_net [get_bd_pins rst_pll_100M/peripheral_aresetn] [get_bd_pins axi_bram_ctrl_1/s_axi_aresetn] [get_bd_pins controller_AXI_0_axi_periph/M02_ARESETN]
 
-connect_bd_net -net rst_pll_aes_peripheral_aresetn [get_bd_pins rst_pll_aes/peripheral_aresetn] [get_bd_pins controler_AXI_0_axi_periph/M01_ARESETN] [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn] [get_bd_pins axi_smc/aresetn] [get_bd_pins AES128Encrypt_0/ap_rst_n]
+connect_bd_net -net rst_pll_aes_peripheral_aresetn [get_bd_pins rst_pll_aes/peripheral_aresetn] [get_bd_pins controller_AXI_0_axi_periph/M01_ARESETN] [get_bd_pins axi_bram_ctrl_0/s_axi_aresetn] [get_bd_pins axi_smc/aresetn] [get_bd_pins AES128Encrypt_0/ap_rst_n]
 
 connect_bd_net -net axi_bram_ctrl_0_bram_addr_a [get_bd_pins axi_bram_ctrl_0/bram_addr_a] [get_bd_pins axi_bram_ctrl_0_bram/addra]
 
@@ -155,9 +166,9 @@ connect_bd_net [get_bd_ports i_bus_reset_n] [get_bd_pins rst_pll_aes/ext_reset_i
 connect_bd_net -net pll_locked [get_bd_pins pll/locked] [get_bd_pins rst_pll_aes/dcm_locked]
 
 # Create address segments
-assign_bd_address -offset 0x80000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces controler_AXI_0/M_AXI] [get_bd_addr_segs AES128Encrypt_0/s_axi_control/Reg] -force
-assign_bd_address -offset 0xC0000000 -range 0x00002000 -target_address_space [get_bd_addr_spaces controler_AXI_0/M_AXI] [get_bd_addr_segs axi_bram_ctrl_1/S_AXI/Mem0] -force
-assign_bd_address -offset 0x40000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces controler_AXI_0/M_AXI] [get_bd_addr_segs axi_led/S_AXI/Reg] -force
+assign_bd_address -offset 0x80000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces controller_AXI_0/M_AXI] [get_bd_addr_segs AES128Encrypt_0/s_axi_control/Reg] -force
+assign_bd_address -offset 0xC0000000 -range 0x00002000 -target_address_space [get_bd_addr_spaces controller_AXI_0/M_AXI] [get_bd_addr_segs axi_bram_ctrl_1/S_AXI/Mem0] -force
+assign_bd_address -offset 0x40000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces controller_AXI_0/M_AXI] [get_bd_addr_segs axi_led/S_AXI/Reg] -force
 assign_bd_address -offset 0xC0000000 -range 0x00002000 -target_address_space [get_bd_addr_spaces AES128Encrypt_0/Data_m_axi_data] [get_bd_addr_segs axi_bram_ctrl_0/S_AXI/Mem0] -force
 
 # Restore current instance

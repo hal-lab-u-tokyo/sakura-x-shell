@@ -185,7 +185,7 @@ proc add_mig_instance { } {
    # create interconnection regading the mig_7series_1
    connect_bd_intf_net -intf_net clk_ref_1 [get_bd_intf_ports clk_ref] [get_bd_intf_pins mig_7series_1/CLK_REF]
 
-  connect_bd_intf_net -intf_net controler_AXI_0_axi_periph_M01_AXI [get_bd_intf_pins controler_AXI_0_axi_periph/M01_AXI] [get_bd_intf_pins mig_7series_1/S_AXI]
+  connect_bd_intf_net -intf_net controller_AXI_0_axi_periph_M01_AXI [get_bd_intf_pins controller_AXI_0_axi_periph/M01_AXI] [get_bd_intf_pins mig_7series_1/S_AXI]
 
   connect_bd_intf_net -intf_net mig_7series_1_DDR3 [get_bd_intf_ports DDR3] [get_bd_intf_pins mig_7series_1/DDR3]
 
@@ -193,16 +193,16 @@ proc add_mig_instance { } {
 
   connect_bd_net -net mig_7series_1_mmcm_locked [get_bd_pins mig_7series_1/mmcm_locked] [get_bd_pins rst_mig_7series_1_100M/dcm_locked]
 
-  connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins rst_mig_7series_1_100M/slowest_sync_clk] [get_bd_pins controler_AXI_0_axi_periph/M01_ACLK]
+  connect_bd_net -net mig_7series_1_ui_clk [get_bd_pins mig_7series_1/ui_clk] [get_bd_pins rst_mig_7series_1_100M/slowest_sync_clk] [get_bd_pins controller_AXI_0_axi_periph/M01_ACLK]
 
   connect_bd_net -net mig_7series_1_ui_clk_sync_rst [get_bd_pins mig_7series_1/ui_clk_sync_rst] [get_bd_pins rst_mig_7series_1_100M/ext_reset_in]
 
    connect_bd_net -net rst_mig_7series_1_100M_interconnect_aresetn [get_bd_pins rst_mig_7series_1_100M/interconnect_aresetn] [get_bd_pins mig_7series_1/aresetn]
 
-  connect_bd_net -net rst_mig_7series_1_100M_peripheral_aresetn [get_bd_pins rst_mig_7series_1_100M/peripheral_aresetn] [get_bd_pins controler_AXI_0_axi_periph/M01_ARESETN]
+  connect_bd_net -net rst_mig_7series_1_100M_peripheral_aresetn [get_bd_pins rst_mig_7series_1_100M/peripheral_aresetn] [get_bd_pins controller_AXI_0_axi_periph/M01_ARESETN]
 
   connect_bd_net -net rst_pll_100M_peripheral_aresetn [get_bd_pins rst_pll_100M/peripheral_aresetn] [get_bd_pins mig_7series_1/sys_rst]
 
    # assign address range 128 MB
-   assign_bd_address -offset 0x80000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces controler_AXI_0/M_AXI] [get_bd_addr_segs mig_7series_1/memmap/memaddr] -force
+   assign_bd_address -offset 0x80000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces controller_AXI_0/M_AXI] [get_bd_addr_segs mig_7series_1/memmap/memaddr] -force
 }

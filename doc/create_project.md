@@ -8,7 +8,7 @@ As an option, the script can enable Memory Interface Generator (MIG) IP in the g
 2. Run the following command to launch Vivado and create a project.
 
 ```bash
-vivado -source vivado/init-shell-project.tcl
+vivado -source vivado/init-shell-project.tcl [-tclargs arg1 -tclargs arg2 ...]
 ```
 
 The following options are available for tclargs

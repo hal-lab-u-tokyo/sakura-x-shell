@@ -1,11 +1,11 @@
 //
 //    Copyright (C) 2024 The University of Tokyo
 //    
-//    File:          /workspace/sakura-x-shell/sakura-x-shell-ctrl/command_control.v
+//    File:          /sakura-x-shell-ctrl/command_control.v
 //    Project:       tkojima
 //    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
 //    Created Date:  25-03-2024 14:14:33
-//    Last Modified: 25-03-2024 14:15:05
+//    Last Modified: 25-01-2025 03:57:06
 //
 
 
@@ -61,9 +61,9 @@ module command_control #(
 
 	// ack data
 	wire [`BYTE_B] w_ack_data;
-	assign w_ack_data = (w_error_cmd) ? `RESPOINSE_CMD_ERR :
-						(w_unknown_cmd) ? `RESPOINSE_UNKNOWN_CMD_ERR :
-						`RESPOINSE_OK;
+	assign w_ack_data = (w_error_cmd) ? `RESPONSE_CMD_ERR :
+						(w_unknown_cmd) ? `RESPONSE_UNKNOWN_CMD_ERR :
+						`RESPONSE_OK;
 
 	// read, write status
 	reg [`WORD_B] r_addr;

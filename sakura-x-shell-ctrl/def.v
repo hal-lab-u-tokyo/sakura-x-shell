@@ -47,8 +47,8 @@
 `define CMD_WRITE 4'h2
 
 // 1 byte response
-`define RESPOINSE_OK 8'h00
-`define RESPOINSE_CMD_ERR 8'h01
-`define RESPOINSE_UNKNOWN_CMD_ERR 8'h02
+`define RESPONSE_OK 8'h00
+`define RESPONSE_CMD_ERR 8'h01
+`define RESPONSE_UNKNOWN_CMD_ERR 8'h02
 
 
