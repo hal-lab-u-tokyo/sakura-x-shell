@@ -21,7 +21,7 @@ The template optionally includes a Memory Interface Generator (MIG) IP to use DD
 ## Project for Spartan-6
 [sakura-x-shell-ctrl](./sakura-x-shell-ctrl) includes ISE project for Spartan-6 FPGA.
 In addition, pre-built bitstream file and MCS file are included in that directory.
-The pre-built design is clocked at 50 MHz.
+The pre-built design is clocked at 20 MHz.
 Please see [Configuration with iMPACT](./doc/config_with_impact.md) to configure the Spartan-6 FPGA.
 
 ## Create a template project for Kintex-7
@@ -64,6 +64,9 @@ source <path to this repo>/examples/aes128_aist_rtl/create_bd.tcl
 ```
 
 To run the encryption with the design, please use `SakuraXShellExampleAES128BitRTL` class in the ChipWhisperer Plugin.
+
+Another RTL implementation of AES 128-bit encryption is available in `examples/aes128_googlevault_rtl`.
+The same class `SakuraXShellExampleAES128BitRTL` can be used to run the encryption with the design but don't forget to set `implementation="google"` argument when `con` method is called.
 
 ### HLS implementation of AES 128-bit encryption
 
