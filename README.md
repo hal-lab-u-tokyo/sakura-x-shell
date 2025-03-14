@@ -56,7 +56,7 @@ Detailed information about each example is available in the [submodule repositor
 
 `examples` directory includes scripts to create block designs with the cryptographic modules.
 
-### RTL implementation of AES 128-bit encryption
+### RTL implementations of AES 128-bit encryption
 
 After creating a project with the template, as described above, you can create a block design by running the following command in the Vivado Tcl console.
 ```tcl
@@ -65,8 +65,10 @@ source <path to this repo>/examples/aes128_aist_rtl/create_bd.tcl
 
 To run the encryption with the design, please use `SakuraXShellExampleAES128BitRTL` class in the ChipWhisperer Plugin.
 
-Another RTL implementation of AES 128-bit encryption is available in `examples/aes128_googlevault_rtl`.
-The same class `SakuraXShellExampleAES128BitRTL` can be used to run the encryption with the design but don't forget to set `implementation="google"` argument when `con` method is called.
+Other RTL implementations of AES 128-bit encryption are available in `examples/aes128_googlevault_rtl` and `examples/aes128_rsm_rtl` directories.
+For aes128_rsm_rtl, you need to generate mask tables by running a setup script `setup_ip.sh` in the directory.
+Detailed instructions are also available in the [submodule repository](https://github.com/hal-lab-u-tokyo/sca_design_repo).
+The same class `SakuraXShellExampleAES128BitRTL` can be used to run the encryption with the design but don't forget to set `implementation="google"` or `implementation="rsm"` argument when `con` method is called.
 
 ### HLS implementation of AES 128-bit encryption
 
@@ -85,6 +87,10 @@ source <path to this repo>/examples/aes128_hls/create_bd.tcl
 ```
 
 To run the encryption with the design, please use `SakuraXShellExampleAES128BitHLS` class in the ChipWhisperer Plugin.
+
+Another HLS implementation of AES 128-bit encryption is available in `examples/aes128_hls_rsm`, which is a protected version of the AES encryption by RSM masking scheme.
+IP package creation and block design creation are the same as the above.
+But don't forget to set `implementation="rsm"` argument when `con` method is called.
 
 ### VexRiscv on SAKURA-X
 32bit RISC-V core, VexRiscv, is also available on SAKURA-X.
