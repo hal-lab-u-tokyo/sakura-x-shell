@@ -77,9 +77,10 @@ In `examples/aes128_hls` directory, a script to create an IP package is availabl
 
 ```bash
 cd examples/aes128_hls
-sh create_ip.sh
+sh create_hls_ip.sh
 ```
 It will create an IP package in `examples/aes128_hls/hls_sakura-x_aes_enc`.
+The target frequency is set to 20 MHz in the script, but you can change it.
 
 After creating a project with the template, as described above, you can create a block design by running the following command in the Vivado Tcl console.
 ```tcl
