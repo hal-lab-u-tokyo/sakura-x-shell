@@ -1,11 +1,11 @@
 //
-//    Copyright (C) 2024 The University of Tokyo
+//    Copyright (C) 2026 University of Tsukuba
 //
-//    File:          /sakura-x-shell-ctrl/ctrl_top.v
-//    Project:       sakura-x-shell
-//    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
+//    File:          /hardware/sakura-x-shell/sakura-x-shell-ctrl/ctrl_top.v
+//    Project:       chipwhisperer-enhanced-plugins
+//    Author:        Takuya Kojima in University of Tsukuba (tkojima@lila.cs.tsukuba.ac.jp)
 //    Created Date:  27-03-2024 20:57:27
-//    Last Modified: 27-03-2024 20:57:27
+//    Last Modified: 27-09-2026 16:49:27
 //
 
 
@@ -26,13 +26,16 @@ module ctrl_top #(
 	// on-board LEDs
 	output [9:0] o_led,
 
-	// FTDI FIFO channel
+	// FTDI FIFO channel (Channel A)
 	input i_ftdi_rxf_n,
 	input i_ftdi_txe_n,
 	output o_ftdi_rd_n,
 	output o_ftdi_wr_n,
 	output o_ftdi_siwua,
 	inout [7:0] io_ftdi_adbus,
+	// FTDI UART Channel (Channel B)
+	// Only RTS is used for reset, so other signals are not connected.
+	input i_ftdi_rts_n,
 
 	// interconnect
 	output o_bus_clk,
@@ -49,13 +52,25 @@ module ctrl_top #(
 );
 	wire clk;
 	wire w_sw_reset_n;
+	wire w_reset_request_n = reset_n & i_ftdi_rts_n;
+	(* ASYNC_REG = "TRUE" *) reg [1:0] r_reset_sync;
+	wire w_hw_reset_n = r_reset_sync[1];
+
+	// Assert immediately; release reset synchronously for all clk-domain logic.
+	always @(posedge clk or negedge w_reset_request_n) begin
+		if (!w_reset_request_n) begin
+			r_reset_sync <= 2'b00;
+		end else begin
+			r_reset_sync <= {r_reset_sync[0], 1'b1};
+		end
+	end
 
 	wire w_blinker_led;
 	blinker #(
 		.MSB(26) // blink per 1.34 sec when 50MHz
 	) blinker0 (
 		.clk(clk),
-		.reset_n(reset_n),
+		.reset_n(w_hw_reset_n),
 		.led(w_blinker_led)
 	);
 
@@ -69,7 +84,7 @@ module ctrl_top #(
 
 	fifo buffer_to_ftdi (
 		.clk(clk),
-		.reset_n(reset_n),
+		.reset_n(w_hw_reset_n),
 		.i_data(w_bridge2buf_data),
 		.i_write_enable(w_bridge2buf_write_enable),
 		.o_full(w_buf2bridge_full),
@@ -89,7 +104,7 @@ module ctrl_top #(
 	wire w_buf2bridge_almost_empty;
 	fifo buffer_from_ftdi (
 		.clk(clk),
-		.reset_n(reset_n),
+		.reset_n(w_hw_reset_n),
 		.i_data(w_ftdi2buf_data),
 		.i_write_enable(w_ftdi2buf_write_enable),
 		.o_full(w_buf2ftdi_full),
@@ -105,7 +120,7 @@ module ctrl_top #(
 		.SYSCLOCK_PERIOD(SYSCLOCK_PERIOD)
 	) ft2232_interface0 (
 		.clk(clk),
-		.reset_n(reset_n),
+		.reset_n(w_hw_reset_n),
 		// to/from FT2232H module
 		.i_ftdi_rxf_n(i_ftdi_rxf_n),
 		.i_ftdi_txe_n(i_ftdi_txe_n),
@@ -127,7 +142,7 @@ module ctrl_top #(
 	wire w_comand_control_busy;
 	command_control command_control0 (
 		.clk(clk),
-		.reset_n(reset_n),
+		.reset_n(w_hw_reset_n),
 		// from FIFO
 		.i_fifo_data(w_buf2bridge_data),
 		.i_fifo_empty(w_buf2bridge_empty),
@@ -168,6 +183,7 @@ module ctrl_top #(
 	pll pll0(
 		.CLK_IN1(i_clk_osc),
 		.CLK_OUT1(clk),
+		// Keep the clock running during an FTDI-requested reset.
 		.RESET(!reset_n)
 	);
 `endif
@@ -183,7 +199,7 @@ module ctrl_top #(
 	// | buf(in) full | buf(in) empty | buf(out) full | buf(out) empty | interface busy | command busy | blinker | N/A | N/A | N/A |
 	assign o_led = {3'b0, w_blinker_led, w_comand_control_busy, w_ftdi_interface_busy, w_buf2bridge_empty, w_buf2ftdi_full, w_buf2ftdi_empty, w_buf2bridge_full};
 
-	assign o_bus_reset_n = reset_n & w_sw_reset_n;
+	assign o_bus_reset_n = w_hw_reset_n & w_sw_reset_n;
 
 	// interconnect clock
 `ifdef SIM

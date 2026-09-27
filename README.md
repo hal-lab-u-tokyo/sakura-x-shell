@@ -40,6 +40,9 @@ For more details, see [doc/create_project.md](doc/create_project.md).
 
 ## Communication with SAKURA-X
 
+For USB identification settings used by automatic device detection, see
+[FT2232H configuration](doc/ft2232h_config.md).
+
 We also provide driver software to communicate with SAKURA-X via USB.
 It is included in our [ChipWhisperer Plugin](https://github.com/hal-lab-u-tokyo/chipwhisperer-enhanced-plugins).
 Thus, it is compatible with [ChipWhisperer](https://github.com/newaetech/chipwhisperer), which is a popular open-source tool for side-channel analysis.
