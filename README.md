@@ -26,12 +26,25 @@ The template optionally includes a Memory Interface Generator (MIG) IP to use DD
 4. **Build and program the Kintex-7 design.** [Create the Vivado project](doc/create_project.md), integrate your IP or one of the [examples below](#block-design-examples-to-integrate-cryptographic-modules), generate the bitstream, and program Kintex-7.
 5. **Connect from Python.** Use the corresponding [plugin target class](https://github.com/hal-lab-u-tokyo/chipwhisperer-enhanced-plugins/blob/master/docs/hardware.md#sakura-x-shell), specifying the Channel A port for communication.
 
-## Project for Spartan-6
+# Controller design for Spartan-6
+## ISE Project Directory
 [sakura-x-shell-ctrl](./sakura-x-shell-ctrl) includes ISE project for Spartan-6 FPGA.
 In addition, pre-built bitstream file and MCS file are included in that directory.
 The pre-built design is clocked at 20 MHz.
 Please see [Configuration with iMPACT](./doc/config_with_impact.md) to configure the Spartan-6 FPGA.
 
+## LED status
+SAKURA-X board has two set of LEDs, one for Spartan-6 and the other for Kintex-7.
+The controller design for Spartan-6 uses the following LEDs to indicate its status.
+
+<img src="doc/images/LED_meanings.png" width="400"  style="display: block; margin: auto;" />
+
+### Abnormal status
+- LED 14 is turned off: The input FIFO is full and the controller cannot accept further input. You need to reset the controller.
+- LED 16 is turned on: The controller is stuck. You need to reset the controller
+- LED 17 is not blinking: The controller is not running. Check the Spartan-6 FPGA is programmed with the correct bitstream.
+
+# Design for Kintex-7
 ## Create a template project for Kintex-7
 
 First, clone this repository.
@@ -109,10 +122,10 @@ But don't forget to set `implementation="rsm"` argument when `con` method is cal
 
 See [VexRiscv_SAKURA-X repo](https://github.com/hal-lab-u-tokyo/VexRiscv_SakuraX) for more details.
 
-## License
+# License
 
 This repository is licensed under MIT License, see [LICENSE](LICENSE) for more information.
 
 
-## Similar projects
+# Similar projects
 * [CW305 shell](https://github.com/hal-lab-u-tokyo/cw305-shell/) - A shell template for NewAE CW305 FPGA

@@ -1,0 +1,16 @@
+_impactbatch.log
+impact.xsl
+impact_impact.xwbt
+_impact.cmd
+_impact.log
+ise_impact.cmd
+webtalk_impact.xml
+usage_statistics_webtalk.html
+webtalk.log
+
+sakura-x-shell-ctrl/*.cfi
+sakura-x-shell-ctrl/*.prm
+sakura-x-shell-ctrl/*.sig
+sakura-x-shell-ctrl/output.txt
+sakura-x-shell-ctrl/auto_project.ipf
+
