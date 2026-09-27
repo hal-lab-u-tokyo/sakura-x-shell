@@ -28,7 +28,7 @@ dnf install libusb-devel fxload
 
 2. build & install the driver
 ```
-mkdir /opt/xilinx-usb-driver && cd /opt/xilinx-usb-driver
+sudo mkdir /opt/xilinx-usb-driver && cd /opt/xilinx-usb-driver
 sudo git clone git://git.zerfleddert.de/usb-driver
 cd usb-driver
 sudo make

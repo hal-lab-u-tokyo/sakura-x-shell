@@ -18,6 +18,14 @@ The template optionally includes a Memory Interface Generator (MIG) IP to use DD
 
 <img src="doc/images/overview.png" width="400"  style="display: block; margin: auto;" />
 
+## Board setup at a glance
+0. (optional) Build the Spartan-6 bitstream and program the Spartan-6 FPGA with it. If you want to use the pre-built bitstream, skip this step.
+1. (optional) **Configure USB identification.** Apply `ft2232h_config/sakura-x-shell.xml` with FT_PROG; see [FT2232H configuration](doc/ft2232h_config.md). Auto device detection (feature only for Linux) requires the `SAKURA-X Shell` USB product string and a unique serial number per board.
+2. **Prepare the host.** Install the [ChipWhisperer plugins](https://github.com/hal-lab-u-tokyo/chipwhisperer-enhanced-plugins/blob/master/docs/setup.md). On Linux, also install/update their udev rules and reconnect USB to create `/dev/sakura-x-shell/<serial>/data` and `reset`.
+3. **Configure Spartan-6 with the shell controller.** Follow [Configuration with iMPACT](doc/config_with_impact.md). The controller can be reused across different Kintex-7 user designs.
+4. **Build and program the Kintex-7 design.** [Create the Vivado project](doc/create_project.md), integrate your IP or one of the [examples below](#block-design-examples-to-integrate-cryptographic-modules), generate the bitstream, and program Kintex-7.
+5. **Connect from Python.** Use the corresponding [plugin target class](https://github.com/hal-lab-u-tokyo/chipwhisperer-enhanced-plugins/blob/master/docs/hardware.md#sakura-x-shell), specifying the Channel A port for communication.
+
 ## Project for Spartan-6
 [sakura-x-shell-ctrl](./sakura-x-shell-ctrl) includes ISE project for Spartan-6 FPGA.
 In addition, pre-built bitstream file and MCS file are included in that directory.

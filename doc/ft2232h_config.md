@@ -30,41 +30,32 @@ string should require explicit port selection instead of automatic matching.
 
 ## Apply the template
 
-1. In FT_PROG, scan the connected devices and save the current board settings
-   as a backup. Record its serial number (for example, `FT97XO0A`).
-2. Apply `ft2232h_config/sakura-x-shell.xml` to the intended FT2232H device using
-   **Apply Template → From File**.
-3. To preserve the existing board identity, disable serial-number
-   auto-generation and enter the recorded serial number before programming.
-   The shared template enables auto-generation for provisioning new boards;
-   it does not contain a serial number to reuse across boards.
-4. Program that device and reconnect USB so the host reads the new descriptors.
+1. In FT_PROG, scan the connected devices and select the intended FT2232H device. 
+2. We recommend exporting the current EEPROM contents to a file for backup before programming. Right-click the device and select **Save As Template** to save the current settings to a file.
+3. Apply `ft2232h_config/sakura-x-shell.xml` to the selected device. Right-click the device and select **Apply Template → From File**. Then, select the template file of "`sakura-x-shell.xml`" and click **Open**.
+4. Check the Product Description field. It should display "`SAKURA-X Shell`".
+5. Program the device. Right-click the device and select **Program Device**. After programming, the device will be reset and re-enumerated with the new settings.
 
-See the [FT_PROG user guide](https://www.ftdichip.com/Support/Documents/AppNotes/AN_124_User_Guide_For_FT_PROG.pdf)
+If you want to fix the USB serial number, go to the **USB String Descriptors** and uncheck the **Auto Generate Serial Number** option. Then, enter a serial number in the **Serial Number** field. The serial number must be unique for each board. 
+
+See the [FT_PROG user guide](https://ftdichip.com/wp-content/uploads/2020/07/AN_124_User_Guide_For_FT_PROG.pdf)
 for template application and programming instructions.
 
 The template retains the supplied Channel A FIFO mode, Channel B UART mode,
 driver selections, and electrical settings. In particular, both driver
 selections remain D2XX; this change does not configure Windows VCP support.
 
-## Verify on Linux
+## Update udev rules on Linux
 
-After reconnecting, `dmesg` should report `Product: SAKURA-X Shell`, with
-VID/PID still `0403:6010`. Confirm the serial number separately; it may change
-if auto-generation was used.
+The udev rules are maintained in the parent
+[chipwhisperer-enhanced-plugins repository](https://github.com/hal-lab-u-tokyo/chipwhisperer-enhanced-plugins).
+Before verifying the device, follow its
+[udev installation instructions](https://github.com/hal-lab-u-tokyo/chipwhisperer-enhanced-plugins/blob/master/docs/setup.md#installing-udev-rules-linux-only)
+to install or update `udev-rules/99-sakura-x.rules`, reload the rules, and
+disconnect and reconnect the USB device.
 
-For each enumerated port, inspect the USB properties:
+For a board with serial number `FT7A1234`, the rules create
+`/dev/sakura-x-shell/FT7A1234/data` for Channel A and
+`/dev/sakura-x-shell/FT7A1234/reset` for Channel B. Each board uses its own
+serial-number directory.
 
-```sh
-udevadm info --query=property --name=/dev/ttyUSB0
-udevadm info --query=property --name=/dev/ttyUSB1
-```
-
-Use the actual port names reported by `dmesg`. Check that
-`ID_USB_INTERFACE_NUM` is `00` for A and `01` for B, and that
-`ID_SERIAL_SHORT` identifies the same board. `udevadm info --attribute-walk
---name=/dev/ttyUSB0` can also show the parent USB `product`, `serial`, and
-interface `bInterfaceNumber` attributes.
-
-Changing the EEPROM descriptors supplies identification metadata; host-side
-automatic selection and reset control require corresponding driver support.
