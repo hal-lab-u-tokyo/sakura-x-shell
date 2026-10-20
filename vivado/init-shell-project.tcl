@@ -1,11 +1,11 @@
 #
-#    Copyright (C) 2024 The University of Tokyo
-#
-#    File:          /vivado/init-shell-project.tcl
-#    Project:       sakura-x-shell
-#    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
+#    Copyright (C) 2026 University of Tsukuba
+#    
+#    File:          /hardware/sakura-x-shell/vivado/init-shell-project.tcl
+#    Project:       chipwhisperer-enhanced-plugins
+#    Author:        Takuya Kojima in University of Tsukuba (tkojima@lila.cs.tsukuba.ac.jp)
 #    Created Date:  27-03-2024 20:56:01
-#    Last Modified: 27-03-2024 20:56:01
+#    Last Modified: 21-10-2026 02:32:39
 #
 
 
@@ -89,19 +89,25 @@ import_files -fileset $constr_set [file normalize [file join $scriptDir "sakura-
 # create design
 create_bd_design $design_name
 common::send_gid_msg -ssname BD::TCL -id 2004 -severity "INFO" "Making design <$design_name> as current_bd_design."
-	 current_bd_design $design_name
+current_bd_design $design_name
 
 # check IP
 set bCheckIPsPassed 1
 set list_check_ips "\ 
-xilinx.com:ip:clk_wiz:6.0\
-xilinx.com:ip:xlconstant:1.1\
-xilinx.com:ip:axi_gpio:2.0\
-tkojima.me:user:controller_AXI:1.0\
-xilinx.com:ip:proc_sys_reset:5.0\
-xilinx.com:ip:mig_7series:4.2\
-xilinx.com:ip:xlslice:1.0\
-"
+	xilinx.com:ip:clk_wiz:6.0\
+	xilinx.com:ip:xlconstant:1.1\
+	xilinx.com:ip:axi_gpio:2.0\
+	tkojima.me:user:controller_AXI:1.0\
+	xilinx.com:ip:proc_sys_reset:5.0\
+	xilinx.com:ip:xlslice:1.0"
+
+if { $enable_mig == 1 } {
+	# add MIG IP to the list
+	set list_check_ips "\
+	$list_check_ips\
+	xilinx.com:ip:mig_7series:4.2"
+}
+
 set list_ips_missing ""
 common::send_gid_msg -ssname BD::TCL -id 2011 -severity "INFO" "Checking if the following IPs exist in the project's IP catalog: $list_check_ips ."
 
@@ -226,9 +232,9 @@ proc create_root_design { parentCell enable_mig } {
 	# Create instance: controller_AXI_0_axi_periph, and set properties
 	set controller_AXI_0_axi_periph [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 controller_AXI_0_axi_periph ]
 	if { $enable_mig != 1 } {
-	set_property CONFIG.NUM_MI {1} $controller_AXI_0_axi_periph
+		set_property CONFIG.NUM_MI {1} $controller_AXI_0_axi_periph
 	} else {
-	set_property CONFIG.NUM_MI {2} $controller_AXI_0_axi_periph
+		set_property CONFIG.NUM_MI {2} $controller_AXI_0_axi_periph
 	}
 	set_property CONFIG.S00_HAS_REGSLICE {1} [get_bd_cells controller_AXI_0_axi_periph]
 
@@ -243,28 +249,77 @@ proc create_root_design { parentCell enable_mig } {
 	] $xlslice_0
 
 	# Create interface connections
-	connect_bd_intf_net -intf_net controller_AXI_0_M_AXI [get_bd_intf_pins controller_AXI_0/M_AXI] [get_bd_intf_pins controller_AXI_0_axi_periph/S00_AXI]
-	connect_bd_intf_net -intf_net controller_AXI_0_axi_periph_M00_AXI [get_bd_intf_pins controller_AXI_0_axi_periph/M00_AXI] [get_bd_intf_pins axi_led/S_AXI]
-	connect_bd_intf_net -intf_net i_osc_clk_1 [get_bd_intf_ports i_osc] [get_bd_intf_pins pll/CLK_IN1_D]
+	connect_bd_intf_net -intf_net controller_AXI_0_M_AXI \
+		[get_bd_intf_pins controller_AXI_0/M_AXI] \
+		[get_bd_intf_pins controller_AXI_0_axi_periph/S00_AXI]
+	connect_bd_intf_net -intf_net controller_AXI_0_axi_periph_M00_AXI \
+		[get_bd_intf_pins controller_AXI_0_axi_periph/M00_AXI] \
+		[get_bd_intf_pins axi_led/S_AXI]
+	connect_bd_intf_net -intf_net i_osc_clk_1 \
+		[get_bd_intf_ports i_osc] \
+		[get_bd_intf_pins pll/CLK_IN1_D]
 
 	# Create port connections
-	connect_bd_net -net axi_led_gpio_io_o [get_bd_pins axi_led/gpio_io_o] [get_bd_pins xlslice_0/Din]
-	connect_bd_net -net bus_clk_1 [get_bd_ports bus_clk] [get_bd_pins controller_AXI_0_axi_periph/S00_ACLK] [get_bd_pins controller_AXI_0/m_axi_aclk]
-	connect_bd_net -net controller_AXI_0_o_addr_ready [get_bd_pins controller_AXI_0/o_addr_ready] [get_bd_ports o_addr_ready]
-	connect_bd_net -net controller_AXI_0_o_read_data [get_bd_pins controller_AXI_0/o_read_data] [get_bd_ports o_read_data]
-	connect_bd_net -net controller_AXI_0_o_read_data_valid [get_bd_pins controller_AXI_0/o_read_data_valid] [get_bd_ports o_read_data_valid]
-	connect_bd_net -net controller_AXI_0_o_write_data_ready [get_bd_pins controller_AXI_0/o_write_data_ready] [get_bd_ports o_write_data_ready]
-	connect_bd_net -net i_addr_valid_1 [get_bd_ports i_addr_valid] [get_bd_pins controller_AXI_0/i_addr_valid]
-	connect_bd_net -net i_bus_reset_n_1 [get_bd_ports i_bus_reset_n] [get_bd_pins pll/resetn] [get_bd_pins rst_pll_100M/ext_reset_in] [get_bd_pins controller_AXI_0_axi_periph/S00_ARESETN] [get_bd_pins controller_AXI_0/m_axi_aresetn]
-	connect_bd_net -net i_common_1 [get_bd_ports i_common] [get_bd_pins controller_AXI_0/i_common]
-	connect_bd_net -net i_read_data_ready_1 [get_bd_ports i_read_data_ready] [get_bd_pins controller_AXI_0/i_read_data_ready]
-	connect_bd_net -net i_write_data_valid_1 [get_bd_ports i_write_data_valid] [get_bd_pins controller_AXI_0/i_write_data_valid]
-	connect_bd_net -net i_write_enable_1 [get_bd_ports i_write_enable] [get_bd_pins controller_AXI_0/i_write_enable]
-	connect_bd_net -net pll_clk_out1 [get_bd_pins pll/clk_out1] [get_bd_pins axi_led/s_axi_aclk] [get_bd_pins controller_AXI_0_axi_periph/M00_ACLK] [get_bd_pins rst_pll_100M/slowest_sync_clk] [get_bd_pins controller_AXI_0_axi_periph/ACLK] 
-	connect_bd_net -net rst_pll_100M_peripheral_aresetn [get_bd_pins rst_pll_100M/peripheral_aresetn] [get_bd_pins axi_led/s_axi_aresetn] [get_bd_pins controller_AXI_0_axi_periph/M00_ARESETN] [get_bd_pins controller_AXI_0_axi_periph/ARESETN]
-	connect_bd_net -net pll_locked [get_bd_pins pll/locked] [get_bd_pins rst_pll_100M/dcm_locked]
-	connect_bd_net -net xlconstant_0_dout [get_bd_pins xlconstant_0/dout] [get_bd_ports o_clk_osc_inh_n]
-	connect_bd_net -net xlslice_0_Dout [get_bd_pins xlslice_0/Dout] [get_bd_ports o_led]
+	connect_bd_net -net net_axi_led_gpio_io_o \
+		[get_bd_pins axi_led/gpio_io_o] \
+		[get_bd_pins xlslice_0/Din]
+	connect_bd_net -net net_bus_clk \
+		[get_bd_ports bus_clk] \
+		[get_bd_pins controller_AXI_0_axi_periph/S00_ACLK] \
+		[get_bd_pins controller_AXI_0/m_axi_aclk]
+	connect_bd_net -net net_controller_AXI_0_o_addr_ready \
+		[get_bd_pins controller_AXI_0/o_addr_ready] \
+		[get_bd_ports o_addr_ready]
+	connect_bd_net -net net_controller_AXI_0_o_read_data \
+		[get_bd_pins controller_AXI_0/o_read_data] \
+		[get_bd_ports o_read_data]
+	connect_bd_net -net net_controller_AXI_0_o_read_data_valid \
+		[get_bd_pins controller_AXI_0/o_read_data_valid] \
+		[get_bd_ports o_read_data_valid]
+	connect_bd_net -net net_controller_AXI_0_o_write_data_ready \
+		[get_bd_pins controller_AXI_0/o_write_data_ready] \
+		[get_bd_ports o_write_data_ready]
+	connect_bd_net -net net_i_addr_valid \
+		[get_bd_ports i_addr_valid] \
+		[get_bd_pins controller_AXI_0/i_addr_valid]
+	connect_bd_net -net net_i_bus_reset_n \
+		[get_bd_ports i_bus_reset_n] \
+		[get_bd_pins pll/resetn] \
+		[get_bd_pins rst_pll_100M/ext_reset_in] \
+		[get_bd_pins controller_AXI_0_axi_periph/S00_ARESETN] \
+		[get_bd_pins controller_AXI_0/m_axi_aresetn]
+	connect_bd_net -net net_i_common \
+		[get_bd_ports i_common] \
+		[get_bd_pins controller_AXI_0/i_common]
+	connect_bd_net -net net_i_read_data_ready \
+		[get_bd_ports i_read_data_ready] \
+		[get_bd_pins controller_AXI_0/i_read_data_ready]
+	connect_bd_net -net net_i_write_data_valid \
+		[get_bd_ports i_write_data_valid] \
+		[get_bd_pins controller_AXI_0/i_write_data_valid]
+	connect_bd_net -net net_i_write_enable \
+		[get_bd_ports i_write_enable] \
+		[get_bd_pins controller_AXI_0/i_write_enable]
+	connect_bd_net -net net_pll_clk_out1 \
+		[get_bd_pins pll/clk_out1] \
+		[get_bd_pins axi_led/s_axi_aclk] \
+		[get_bd_pins controller_AXI_0_axi_periph/M00_ACLK] \
+		[get_bd_pins rst_pll_100M/slowest_sync_clk] \
+		[get_bd_pins controller_AXI_0_axi_periph/ACLK] 
+	connect_bd_net -net net_rst_pll_100M_peripheral_aresetn \
+		[get_bd_pins rst_pll_100M/peripheral_aresetn] \
+		[get_bd_pins axi_led/s_axi_aresetn] \
+		[get_bd_pins controller_AXI_0_axi_periph/M00_ARESETN] \
+		[get_bd_pins controller_AXI_0_axi_periph/ARESETN]
+	connect_bd_net -net net_pll_locked \
+		[get_bd_pins pll/locked] \
+		[get_bd_pins rst_pll_100M/dcm_locked]
+	connect_bd_net -net net_xlconstant_0_dout \
+		[get_bd_pins xlconstant_0/dout] \
+		[get_bd_ports o_clk_osc_inh_n]
+	connect_bd_net -net net_xlslice_0_Dout \
+		[get_bd_pins xlslice_0/Dout] \
+		[get_bd_ports o_led]
 
 	if { $enable_mig == 1 } {
 		add_mig_instance
