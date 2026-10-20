@@ -1,11 +1,11 @@
 //
-//    Copyright (C) 2024 The University of Tokyo
-//
-//    File:          /ip_repo/controller_AXI_1_0/hdl/controller_AXI_v1_0_M_AXI.v
-//    Project:       sakura-x-shell
-//    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
+//    Copyright (C) 2026 University of Tsukuba
+//    
+//    File:          /hardware/sakura-x-shell/vivado/ip_repo/controller_AXI_1_0/hdl/controller_AXI_v1_0_M_AXI.v
+//    Project:       chipwhisperer-enhanced-plugins
+//    Author:        Takuya Kojima in University of Tsukuba (tkojima@lila.cs.tsukuba.ac.jp)
 //    Created Date:  27-03-2024 21:00:44
-//    Last Modified: 27-03-2024 21:00:44
+//    Last Modified: 21-10-2026 02:49:42
 //
 
 
@@ -103,259 +103,115 @@
 		output wire  M_AXI_RREADY
 	);
 
-	// registers for AXI4LITE
-	// write transaction
-	reg r_axi_awvalid, r_axi_wvalid, r_axi_bready;
-	// read transaction
-	reg r_axi_arvalid, r_axi_rready;
-	//write address
-	reg [C_M_AXI_ADDR_WIDTH-1 : 0] 	r_axi_awaddr;
-	//write data
-	reg [C_M_AXI_DATA_WIDTH-1 : 0] 	r_axi_wdata;
-	//read addresss
-	reg [C_M_AXI_ADDR_WIDTH-1 : 0] 	r_axi_araddr;
+	localparam STATE_W = 8;
+	localparam STATE_IDLE_B = 			0;
+	localparam STATE_IDLE = 			(1 << STATE_IDLE_B);
+	localparam STATE_WRITE_DATA_B = 	1;
+	localparam STATE_WRITE_DATA = 		(1 << STATE_WRITE_DATA_B);
+	localparam STATE_WRITE_TRANSFER_B = 2;
+	localparam STATE_WRITE_TRANSFER = 	(1 << STATE_WRITE_TRANSFER_B);
+	localparam STATE_WRITE_RESPONSE_B = 3;
+	localparam STATE_WRITE_RESPONSE = 	(1 << STATE_WRITE_RESPONSE_B);
+	localparam STATE_WRITE_ACK_B = 		4;
+	localparam STATE_WRITE_ACK = 		(1 << STATE_WRITE_ACK_B);
+	localparam STATE_READ_ADDR_B = 		5;
+	localparam STATE_READ_ADDR = 		(1 << STATE_READ_ADDR_B);
+	localparam STATE_READ_TRANSFER_B = 	6;
+	localparam STATE_READ_TRANSFER = 	(1 << STATE_READ_TRANSFER_B);
+	localparam STATE_READ_ACK_B = 		7;
+	localparam STATE_READ_ACK = 		(1 << STATE_READ_ACK_B);
 
-	reg r_addr_valid, r_addr_valid_delayed;
-	wire w_raise_addr_valid;
-	reg r_wdata_valid, r_wdata_valid_delayed;
-	wire w_raise_wdata_valid;
-	reg r_addr_ready;
-
-	//Adding the offset address to the base addr of the slave
-	assign M_AXI_AWADDR	= C_M_TARGET_SLAVE_BASE_ADDR + r_axi_awaddr;
-	//AXI 4 write data
-	assign M_AXI_WDATA	= r_axi_wdata;
-	assign M_AXI_AWPROT	= 3'b000;
-	assign M_AXI_AWVALID	= r_axi_awvalid;
-	//Write Data(W)
-	assign M_AXI_WVALID	= r_axi_wvalid;
-	//Set all byte strobes in this example
-	assign M_AXI_WSTRB	= 4'b1111;
-	//Write Response (B)
-	assign M_AXI_BREADY	= r_axi_bready;
-	//Read Address (AR)
-	assign M_AXI_ARADDR	= C_M_TARGET_SLAVE_BASE_ADDR + r_axi_araddr;
-	assign M_AXI_ARVALID	= r_axi_arvalid;
-	assign M_AXI_ARPROT	= 3'b001;
-	//Read and Read Response (R)
-	assign M_AXI_RREADY	= r_axi_rready;
-
-	// internal control signal
-	assign w_raise_addr_valid = (!r_addr_valid_delayed) && r_addr_valid;
-	assign w_raise_wdata_valid = (!r_wdata_valid_delayed) && r_wdata_valid;
-	reg r_read_data_valid;
-
-	// output to the interconnect
+	reg [STATE_W-1:0] r_state;
+	reg [C_M_AXI_ADDR_WIDTH-1:0] r_addr;
+	reg [C_M_AXI_DATA_WIDTH-1:0] r_write_data;
 	reg [31:0] r_read_data;
-	assign o_read_data = r_read_data;
+	reg r_addr_ready;
+	reg r_axi_awvalid;
+	reg r_axi_wvalid;
+
+	assign M_AXI_AWADDR = C_M_TARGET_SLAVE_BASE_ADDR + r_addr;
+	assign M_AXI_AWPROT = 3'b000;
+	assign M_AXI_AWVALID = r_axi_awvalid;
+	assign M_AXI_WDATA = r_write_data;
+	assign M_AXI_WSTRB = {C_M_AXI_DATA_WIDTH/8{1'b1}};
+	assign M_AXI_WVALID = r_axi_wvalid;
+	assign M_AXI_BREADY = r_state == STATE_WRITE_RESPONSE;
+	assign M_AXI_ARADDR = C_M_TARGET_SLAVE_BASE_ADDR + r_addr;
+	assign M_AXI_ARPROT = 3'b001;
+	assign M_AXI_ARVALID = r_state == STATE_READ_ADDR;
+	assign M_AXI_RREADY = r_state == STATE_READ_TRANSFER;
+
 	assign o_addr_ready = r_addr_ready;
-	assign o_read_data_valid = r_read_data_valid;
-	assign o_write_data_ready = r_wdata_valid_delayed;
-
-
-	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
-			r_addr_valid <= 1'b0;
-			r_addr_valid_delayed <= 1'b0;
-			r_wdata_valid <= 1'b0;
-			r_wdata_valid_delayed <= 1'b0;
-			r_read_data_valid <= 1'b0;
-		end else begin
-			r_addr_valid <= i_addr_valid;
-			r_addr_valid_delayed <= r_addr_valid;
-			r_wdata_valid <= i_write_data_valid;
-			r_wdata_valid_delayed <= r_wdata_valid;
-			r_read_data_valid <= M_AXI_RVALID;
-		end
-	end
-
-	// response ready
-	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
-			r_addr_ready <= 1'b0;
-		end else begin
-			if (r_axi_awvalid && M_AXI_AWREADY) begin
-				r_addr_ready <= 1'b1;
-			end else if (r_axi_arvalid && M_AXI_ARREADY) begin
-				r_addr_ready <= 1'b1;
-			end else begin
-				r_addr_ready <= 1'b0;
-			end
-		end
-	end
-
-	//--------------------
-	//Write Address Channel
-	//--------------------
-
-	// The purpose of the write address channel is to request the address and
-	// command information for the entire transaction.  It is a single beat
-	// of information.
-
-	// Note for this example the axi_awvalid/axi_wvalid are asserted at the same
-	// time, and then each is deasserted independent from each other.
-	// This is a lower-performance, but simplier control scheme.
-
-	// AXI VALID signals must be held active until accepted by the partner.
-
-	// A data transfer is accepted by the slave when a master has
-	// VALID data and the slave acknoledges it is also READY. While the master
-	// is allowed to generated multiple, back-to-back requests by not
-	// deasserting VALID, this design will add rest cycle for
-	// simplicity.
-
-	// Since only one outstanding transaction is issued by the user design,
-	// there will not be a collision between a new request and an accepted
-	// request on the same clock cycle.
+	assign o_write_data_ready = r_state == STATE_WRITE_ACK;
+	assign o_read_data = r_read_data;
+	assign o_read_data_valid = r_state == STATE_READ_ACK;
 
 	always @(posedge M_AXI_ACLK) begin
-		//Only VALID signals must be deasserted during reset per AXI spec
-		//Consider inverting then registering active-low reset for higher fmax
-		if (M_AXI_ARESETN == 0) begin
-			r_axi_awvalid <= 1'b0;
-		end else begin
-			if (w_raise_addr_valid && i_write_enable) begin
-				r_axi_awvalid <= 1'b1;
-			end else if (M_AXI_AWREADY && r_axi_awvalid) begin
-				//Address accepted by interconnect/slave (issue of M_AXI_AWREADY by slave)
-				r_axi_awvalid <= 1'b0;
-			end
-		end
-	end
-
-	//--------------------
-	//Write Data Channel
-	//--------------------
-
-	//The write data channel is for transfering the actual data.
-	//The data generation is speific to the example design, and
-	//so only the WVALID/WREADY handshake is shown here
-
-	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
-			r_axi_wvalid <= 1'b0;
-		end else if (w_raise_wdata_valid) begin
-			//Signal a new address/data command is available by user logic
-			r_axi_wvalid <= 1'b1;
- 		end else if (M_AXI_WREADY && r_axi_wvalid) begin
-			//Data accepted by interconnect/slave (issue of M_AXI_WREADY by slave)
-			r_axi_wvalid <= 1'b0;
-		end
-	end
-
-
-	//----------------------------
-	//Write Response (B) Channel
-	//----------------------------
-
-	//The write response channel provides feedback that the write has committed
-	//to memory. BREADY will occur after both the data and the write address
-	//has arrived and been accepted by the slave, and can guarantee that no
-	//other accesses launched afterwards will be able to be reordered before it.
-
-	//The BRESP bit [1] is used indicate any errors from the interconnect or
-	//slave for the entire write burst. This example will capture the error.
-
-	//While not necessary per spec, it is advisable to reset READY signals in
-	//case of differing reset latencies between master/slave.
-
-	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
-			r_axi_bready <= 1'b0;
-		end else if (M_AXI_BVALID && ~r_axi_bready) begin
-			// accept/acknowledge bresp with r_axi_bready by the master
-			// when M_AXI_BVALID is asserted by slave
-			r_axi_bready <= 1'b1;
-		end else if (r_axi_bready) begin
-		// deassert after one clock cycle
-			r_axi_bready <= 1'b0;
-		end
-	end
-
-	//----------------------------
-	//Read Address Channel
-	//----------------------------
-
-	// A new axi_arvalid is asserted when there is a valid read address
-	// available by the master. start_single_read triggers a new read
-	// transaction
-	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
-			r_axi_arvalid <= 1'b0;
-		end else if (w_raise_addr_valid && ~i_write_enable) begin
-			//Signal a new read address command is available by user logic
-			r_axi_arvalid <= 1'b1;
-		end	else if (M_AXI_ARREADY && r_axi_arvalid) begin
-			//RAddress accepted by interconnect/slave (issue of M_AXI_ARREADY by slave)
-				r_axi_arvalid <= 1'b0;
-		end
-		// retain the previous value
-	end
-
-
-	//--------------------------------
-	//Read Data (and Response) Channel
-	//--------------------------------
-
-	//The Read Data channel returns the results of the read request
-	//The master will accept the read data by asserting axi_rready
-	//when there is a valid read data available.
-	//While not necessary per spec, it is advisable to reset READY signals in
-	//case of differing reset latencies between master/slave.
-
-	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
-			r_axi_rready <= 1'b0;
-		end else if (M_AXI_RVALID && ~r_axi_rready) begin
-			r_axi_rready <= 1'b1;
-		end else if (r_axi_rready) begin
-			// assert r_axi_rready for one clock cycle
-			r_axi_rready <= 1'b0;
-		end
-		// retain the previous value
-	end
-
-	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
+		if (!M_AXI_ARESETN) begin
+			r_state <= STATE_IDLE;
+			r_addr <= 0;
+			r_write_data <= C_M_START_DATA_VALUE;
 			r_read_data <= 0;
+			r_addr_ready <= 1'b0;
+			r_axi_awvalid <= 1'b0;
+			r_axi_wvalid <= 1'b0;
 		end else begin
-			if (M_AXI_RVALID) begin
-				r_read_data <= M_AXI_RDATA;
-			end
+			r_addr_ready <= 1'b0;
+			if (M_AXI_AWVALID && M_AXI_AWREADY)
+				r_axi_awvalid <= 1'b0;
+			if (M_AXI_WVALID && M_AXI_WREADY)
+				r_axi_wvalid <= 1'b0;
+			case (r_state)
+				STATE_IDLE: begin
+					if (i_addr_valid) begin
+						r_addr <= i_common;
+						if (i_write_enable) begin
+							r_addr_ready <= 1'b1;
+							r_axi_awvalid <= 1'b1;
+							r_state <= STATE_WRITE_DATA;
+						end else begin
+							r_state <= STATE_READ_ADDR;
+						end
+					end
+				end
+				STATE_WRITE_DATA: begin
+					if (i_write_data_valid) begin
+						r_write_data <= i_common;
+						r_axi_wvalid <= 1'b1;
+						r_state <= STATE_WRITE_TRANSFER;
+					end
+				end
+				STATE_WRITE_TRANSFER: begin
+					if (!r_axi_awvalid && !r_axi_wvalid)
+						r_state <= STATE_WRITE_RESPONSE;
+				end
+				STATE_WRITE_RESPONSE: begin
+					if (M_AXI_BVALID && M_AXI_BREADY)
+						r_state <= STATE_WRITE_ACK;
+				end
+				STATE_WRITE_ACK: begin
+					if (!i_write_data_valid)
+						r_state <= STATE_IDLE;
+				end
+				STATE_READ_ADDR: begin
+					if (M_AXI_ARVALID && M_AXI_ARREADY) begin
+						r_addr_ready <= 1'b1;
+						r_state <= STATE_READ_TRANSFER;
+					end
+				end
+				STATE_READ_TRANSFER: begin
+					if (M_AXI_RVALID && M_AXI_RREADY) begin
+						r_read_data <= M_AXI_RDATA;
+						r_state <= STATE_READ_ACK;
+					end
+				end
+				STATE_READ_ACK: begin
+					if (i_read_data_ready)
+						r_state <= STATE_IDLE;
+				end
+				default: r_state <= STATE_IDLE;
+			endcase
 		end
 	end
-
-
-	//Address/data pairs for this example. The read and write values should
-	//match.
-	//Modify these as desired for different address patterns.
-
-	// Write address
-	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
-			r_axi_awaddr <= 0;
-		end else if (w_raise_addr_valid && i_write_enable) begin
-			r_axi_awaddr <= i_common;
-		end
-	end
-
-	// Write data
-	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
-			r_axi_wdata <= C_M_START_DATA_VALUE;
-		end else if (w_raise_wdata_valid) begin
-			r_axi_wdata <= i_common;
-		end
-	end
-
-	//Read Addresses
-	always @(posedge M_AXI_ACLK) begin
-		if (M_AXI_ARESETN == 0) begin
-			r_axi_araddr <= 0;
-		end else if (w_raise_addr_valid && ~i_write_enable) begin
-			r_axi_araddr <= i_common;
-		end
-	end
-
 
 endmodule

@@ -8,4 +8,4 @@
 #    Last Modified: 27-03-2024 20:56:44
 #
 
-set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets main_i/pll/inst/clk_in1_main_pll_0]
+# set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets main_i/pll/inst/clk_in1_main_pll_0]
