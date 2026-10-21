@@ -1,3 +1,13 @@
+#
+#    Copyright (C) 2026 University of Tsukuba
+#    
+#    File:          /examples/aes128_rsm_rtl/create_bd.tcl
+#    Project:       sakura-x-shell
+#    Author:        Takuya Kojima in University of Tsukuba (tkojima@lila.cs.tsukuba.ac.jp)
+#    Created Date:  22-10-2026 04:51:12
+#    Last Modified: 22-10-2026 04:51:13
+#
+
 variable design_name
 set design_name main
 
@@ -108,7 +118,7 @@ connect_bd_net -net rst_pll_aes_peripheral_aresetn [get_bd_pins rst_pll_aes/peri
 
 connect_bd_net [get_bd_ports i_bus_reset_n] [get_bd_pins rst_pll_aes/ext_reset_in]
 
-connect_bd_net -net pll_locked [get_bd_pins pll/locked] [get_bd_pins rst_pll_aes/dcm_locked]
+connect_bd_net [get_bd_pins pll/locked] [get_bd_pins rst_pll_aes/dcm_locked]
 
 
 # Create address segments

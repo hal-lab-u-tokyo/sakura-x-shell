@@ -1,11 +1,11 @@
 //
 //    Copyright (C) 2026 University of Tsukuba
 //    
-//    File:          /hardware/sakura-x-shell/vivado/ip_repo/controller_AXI_1_0/hdl/controller_AXI_v1_0_M_AXI.v
+//    File:          /vivado/ip_repo/controller_AXI_1_0/hdl/controller_AXI_v1_0_M_AXI.v
 //    Project:       chipwhisperer-enhanced-plugins
 //    Author:        Takuya Kojima in University of Tsukuba (tkojima@lila.cs.tsukuba.ac.jp)
 //    Created Date:  27-03-2024 21:00:44
-//    Last Modified: 21-10-2026 02:49:42
+//    Last Modified: 22-10-2026 04:52:48
 //
 
 

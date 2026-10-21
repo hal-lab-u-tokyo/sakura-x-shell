@@ -1,11 +1,11 @@
 #
 #    Copyright (C) 2025 The University of Tokyo
 #    
-#    File:          /examples/aes128_hls/create_bd.tcl
+#    File:          /hardware/sakura-x-shell/examples/aes128_hls/create_bd.tcl
 #    Project:       sakura-x-shell
 #    Author:        Takuya Kojima in The University of Tokyo (tkojima@hal.ipc.i.u-tokyo.ac.jp)
 #    Created Date:  25-01-2025 04:41:33
-#    Last Modified: 25-01-2025 04:42:16
+#    Last Modified: 22-10-2026 04:47:39
 #
 
 
@@ -163,7 +163,7 @@ connect_bd_net -net axi_bram_ctrl_0_bram_wrdata_a [get_bd_pins axi_bram_ctrl_0/b
 
 connect_bd_net [get_bd_ports i_bus_reset_n] [get_bd_pins rst_pll_aes/ext_reset_in]
 
-connect_bd_net -net pll_locked [get_bd_pins pll/locked] [get_bd_pins rst_pll_aes/dcm_locked]
+connect_bd_net [get_bd_pins pll/locked] [get_bd_pins rst_pll_aes/dcm_locked]
 
 # Create address segments
 assign_bd_address -offset 0x80000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces controller_AXI_0/M_AXI] [get_bd_addr_segs AES128Encrypt_0/s_axi_control/Reg] -force

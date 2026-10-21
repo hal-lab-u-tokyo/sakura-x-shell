@@ -1,7 +1,7 @@
 # SAKURA-X-SHELL
 
 This repository provides a shell template for SAKURA-X board.
-Vivado 2023.2 was used to verify the design.
+Vivado 2025.2 was used to verify the design.
 
 ## Overview
 
