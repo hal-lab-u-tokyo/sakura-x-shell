@@ -5,7 +5,7 @@
 #    Project:       chipwhisperer-enhanced-plugins
 #    Author:        Takuya Kojima in University of Tsukuba (tkojima@lila.cs.tsukuba.ac.jp)
 #    Created Date:  27-03-2024 20:56:01
-#    Last Modified: 09-11-2026 18:31:09
+#    Last Modified: 09-11-2026 21:18:33
 #
 
 
@@ -182,6 +182,7 @@ proc create_root_design { parentCell enable_mig } {
 	set o_read_data_valid [ create_bd_port -dir O o_read_data_valid ]
 	set i_write_data_valid [ create_bd_port -dir I i_write_data_valid ]
 	set o_led [ create_bd_port -dir O -from 9 -to 0 o_led ]
+	set k_dipsw [ create_bd_port -dir I -from 7 -to 0 k_dipsw ]
 
 	# Create instance: pll, and set properties
 	set pll [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 pll ]
@@ -216,14 +217,16 @@ proc create_root_design { parentCell enable_mig } {
 	# Create instance: xlconstant_0, and set properties
 	set xlconstant_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0 ]
 
-	# Create instance: axi_led, and set properties
-	set axi_led [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_led ]
+	# Create instance: axi_usr_dip_led, and set properties
+	set axi_usr_dip_led [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_usr_dip_led ]
 	set_property -dict [list \
-		CONFIG.C_ALL_OUTPUTS {1} \
-		CONFIG.C_DOUT_DEFAULT {0xFFFFFFFF} \
-		CONFIG.C_GPIO_WIDTH {10} \
-	] $axi_led
-
+		CONFIG.C_ALL_INPUTS {1} \
+		CONFIG.C_ALL_OUTPUTS_2 {1} \
+		CONFIG.C_GPIO2_WIDTH {10} \
+		CONFIG.C_GPIO_WIDTH {8} \
+		CONFIG.C_DOUT_DEFAULT_2 {0x000003FF} \
+		CONFIG.C_IS_DUAL {1} \
+	] $axi_usr_dip_led
 
 	# Create instance: controller_AXI_0, and set properties
 	set controller_AXI_0 [ create_bd_cell -type ip -vlnv tkojima.me:user:controller_AXI:1.0 controller_AXI_0 ]
@@ -247,16 +250,18 @@ proc create_root_design { parentCell enable_mig } {
 		[get_bd_intf_pins controller_AXI_0_axi_periph/S00_AXI]
 	connect_bd_intf_net -intf_net controller_AXI_0_axi_periph_M00_AXI \
 		[get_bd_intf_pins controller_AXI_0_axi_periph/M00_AXI] \
-		[get_bd_intf_pins axi_led/S_AXI]
+		[get_bd_intf_pins axi_usr_dip_led/S_AXI]
 	connect_bd_intf_net -intf_net i_osc_clk_1 \
 		[get_bd_intf_ports i_osc] \
 		[get_bd_intf_pins pll/CLK_IN1_D]
 
 	# Create port connections
-	connect_bd_net -net net_axi_led_gpio_io_o \
-		[get_bd_pins axi_led/gpio_io_o] \
+	connect_bd_net -net net_o_led \
+		[get_bd_pins axi_usr_dip_led/gpio2_io_o] \
 		[get_bd_ports o_led]
-
+	connect_bd_net -net net_dipsw \
+		[get_bd_ports k_dipsw] \
+		[get_bd_pins axi_usr_dip_led/gpio_io_i]
 	connect_bd_net -net net_bus_clk \
 		[get_bd_ports bus_clk] \
 		[get_bd_pins controller_AXI_0_axi_periph/S00_ACLK] \
@@ -296,13 +301,13 @@ proc create_root_design { parentCell enable_mig } {
 		[get_bd_pins controller_AXI_0/i_write_enable]
 	connect_bd_net -net net_pll_clk_out1 \
 		[get_bd_pins pll/clk_out1] \
-		[get_bd_pins axi_led/s_axi_aclk] \
+		[get_bd_pins axi_usr_dip_led/s_axi_aclk] \
 		[get_bd_pins controller_AXI_0_axi_periph/M00_ACLK] \
 		[get_bd_pins rst_pll_100M/slowest_sync_clk] \
 		[get_bd_pins controller_AXI_0_axi_periph/ACLK] 
 	connect_bd_net -net net_rst_pll_100M_peripheral_aresetn \
 		[get_bd_pins rst_pll_100M/peripheral_aresetn] \
-		[get_bd_pins axi_led/s_axi_aresetn] \
+		[get_bd_pins axi_usr_dip_led/s_axi_aresetn] \
 		[get_bd_pins controller_AXI_0_axi_periph/M00_ARESETN] \
 		[get_bd_pins controller_AXI_0_axi_periph/ARESETN]
 	connect_bd_net -net net_pll_locked \
@@ -318,7 +323,7 @@ proc create_root_design { parentCell enable_mig } {
 	}
 
 	# Create address segments
-	assign_bd_address -offset 0x40000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces controller_AXI_0/M_AXI] [get_bd_addr_segs axi_led/S_AXI/Reg] -force
+	assign_bd_address -offset 0x40000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces controller_AXI_0/M_AXI] [get_bd_addr_segs axi_usr_dip_led/S_AXI/Reg] -force
 
 	# Restore current instance
 	current_bd_instance $oldCurInst

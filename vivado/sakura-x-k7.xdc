@@ -53,29 +53,29 @@ set_property IOSTANDARD LVCMOS25 [get_ports o_clk_osc_inh_n]
 # set_property IOSTANDARD LVCMOS25 [get_ports k_pushsw]
 
 # IO_L21P_T3_DQS_14
-# set_property PACKAGE_PIN J21 [get_ports {k_dipsw[0]}]
-# set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[0]}]
+set_property PACKAGE_PIN J21 [get_ports {k_dipsw[0]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[0]}]
 # IO_L7P_T1_13
-# set_property PACKAGE_PIN N19 [get_ports {k_dipsw[1]}]
-# set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[1]}]
+set_property PACKAGE_PIN N19 [get_ports {k_dipsw[1]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[1]}]
 # IO_25_15
-# set_property PACKAGE_PIN M16 [get_ports {k_dipsw[2]}]
-# set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[2]}]
+set_property PACKAGE_PIN M16 [get_ports {k_dipsw[2]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[2]}]
 # IO_L7N_T1_13
-# set_property PACKAGE_PIN M20 [get_ports {k_dipsw[3]}]
-# set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[3]}]
+set_property PACKAGE_PIN M20 [get_ports {k_dipsw[3]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[3]}]
 # IO_L24P_T3_RS1_15
-# set_property PACKAGE_PIN L17 [get_ports {k_dipsw[4]}]
-# set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[4]}]
+set_property PACKAGE_PIN L17 [get_ports {k_dipsw[4]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[4]}]
 # IO_L4N_T0_13
-# set_property PACKAGE_PIN N24 [get_ports {k_dipsw[5]}]
-# set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[5]}]
+set_property PACKAGE_PIN N24 [get_ports {k_dipsw[5]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[5]}]
 # IO_0_14
-# set_property PACKAGE_PIN K21 [get_ports {k_dipsw[6]}]
-# set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[6]}]
+set_property PACKAGE_PIN K21 [get_ports {k_dipsw[6]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[6]}]
 # IO_L9P_T1_DQS_14
-# set_property PACKAGE_PIN E21 [get_ports {k_dipsw[7]}]
-# set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[7]}]
+set_property PACKAGE_PIN E21 [get_ports {k_dipsw[7]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {k_dipsw[7]}]
 
 #######
 # LED #
