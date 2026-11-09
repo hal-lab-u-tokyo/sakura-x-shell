@@ -1,11 +1,11 @@
 #
 #    Copyright (C) 2026 University of Tsukuba
 #    
-#    File:          /hardware/sakura-x-shell/vivado/init-shell-project.tcl
+#    File:          /vivado/init-shell-project.tcl
 #    Project:       chipwhisperer-enhanced-plugins
 #    Author:        Takuya Kojima in University of Tsukuba (tkojima@lila.cs.tsukuba.ac.jp)
 #    Created Date:  27-03-2024 20:56:01
-#    Last Modified: 21-10-2026 02:32:39
+#    Last Modified: 09-11-2026 18:31:09
 #
 
 
@@ -98,8 +98,7 @@ set list_check_ips "\
 	xilinx.com:ip:xlconstant:1.1\
 	xilinx.com:ip:axi_gpio:2.0\
 	tkojima.me:user:controller_AXI:1.0\
-	xilinx.com:ip:proc_sys_reset:5.0\
-	xilinx.com:ip:xlslice:1.0"
+	xilinx.com:ip:proc_sys_reset:5.0"
 
 if { $enable_mig == 1 } {
 	# add MIG IP to the list
@@ -222,7 +221,7 @@ proc create_root_design { parentCell enable_mig } {
 	set_property -dict [list \
 		CONFIG.C_ALL_OUTPUTS {1} \
 		CONFIG.C_DOUT_DEFAULT {0xFFFFFFFF} \
-		CONFIG.C_GPIO_WIDTH {32} \
+		CONFIG.C_GPIO_WIDTH {10} \
 	] $axi_led
 
 
@@ -241,12 +240,6 @@ proc create_root_design { parentCell enable_mig } {
 	# Create instance: rst_pll_100M, and set properties
 	set rst_pll_100M [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_pll_100M ]
 
-	# Create instance: xlslice_0, and set properties
-	set xlslice_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_0 ]
-	set_property -dict [list \
-		CONFIG.DIN_FROM {9} \
-		CONFIG.DIN_TO {0} \
-	] $xlslice_0
 
 	# Create interface connections
 	connect_bd_intf_net -intf_net controller_AXI_0_M_AXI \
@@ -262,7 +255,8 @@ proc create_root_design { parentCell enable_mig } {
 	# Create port connections
 	connect_bd_net -net net_axi_led_gpio_io_o \
 		[get_bd_pins axi_led/gpio_io_o] \
-		[get_bd_pins xlslice_0/Din]
+		[get_bd_ports o_led]
+
 	connect_bd_net -net net_bus_clk \
 		[get_bd_ports bus_clk] \
 		[get_bd_pins controller_AXI_0_axi_periph/S00_ACLK] \
@@ -317,9 +311,7 @@ proc create_root_design { parentCell enable_mig } {
 	connect_bd_net -net net_xlconstant_0_dout \
 		[get_bd_pins xlconstant_0/dout] \
 		[get_bd_ports o_clk_osc_inh_n]
-	connect_bd_net -net net_xlslice_0_Dout \
-		[get_bd_pins xlslice_0/Dout] \
-		[get_bd_ports o_led]
+
 
 	if { $enable_mig == 1 } {
 		add_mig_instance
